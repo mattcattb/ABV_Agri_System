@@ -1,0 +1,17 @@
+# ABV Camera Monitoring System
+
+This project aims to provide stable control over a camera monitoring system for research use. 
+
+## Project Overview
+
+This project has 2 switch parts:
+- Data Collection Switch: Activates and saves images at 30FPS to external storage on toggle. 
+- Model Prediction Switch: (In Progress) Runs YOLOv8 image prediction model every 5 seconds, saving on external storage.
+
+## Setup
+
+### Hardware Requirements
+- Jetson Nano (Jetpack SDK)
+- USB Camera
+
+### Software Requirements
