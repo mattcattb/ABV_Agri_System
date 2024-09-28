@@ -1,5 +1,4 @@
 #!/bin/bash
 
-source/path/to/conda.sh
-conda activate myenv
-python3 ABV/start_script.py
+source activate env369
+python3 /home/preag/Desktop/ABV_Agri_System/ABV/main.py
