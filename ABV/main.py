@@ -1,4 +1,6 @@
-import jetson.GPIO as GPIO
+# -*- coding: utf-8 -*-
+
+import Jetson.GPIO as GPIO
 import time 
 import subprocess
 
@@ -9,8 +11,8 @@ import subprocess
 """
 
 data_col_pin = 15 # data collection switch
-g_led = 19 # jetson on pin
-b_led = None # data-collection running 
+g_led = 13 # jetson on pin
+b_led = 19 # data-collection running 
 r_led = None # model inference running
 
 data_collection_process = None
@@ -18,9 +20,11 @@ data_collection_process = None
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(data_col_pin, GPIO.IN)
 GPIO.setup(g_led, GPIO.OUT)
+GPIO.setup(b_led, GPIO.OUT)
 
 def start_data_collection():
     global data_collection_process
+    GPIO.output(b_led, GPIO.HIGH)
     print("Data collection switch on. Running Data Collection Script..")
     if data_collection_process is None: # start subprocess only of not running
         data_collection_process = subprocess.Popen(["python3", "data_collection.py"])
@@ -29,6 +33,7 @@ def stop_data_collection():
     global data_collection_process
     if data_collection_process:
         data_collection_process.terminate()
+        GPIO.output(b_led, GPIO.LOW)
         try: 
             data_collection_process.wait(timeout=2)
             print("Subprocess terminated")
@@ -44,7 +49,7 @@ def main():
     cur_dc_state = GPIO.input(data_col_pin)
     dc_on_state = GPIO.LOW if cur_dc_state == GPIO.HIGH else GPIO.HIGH
     last_dc_state = cur_dc_state 
-    GPIO.output(g_led, GPIO.HIGH)
+    GPIO.output(g_led, GPIO.HIGH) # system has been turned on!
 
     try:
         print("Monitoring switch. Press Ctrl+C to exit.")
@@ -66,7 +71,7 @@ def main():
     except KeyboardInterrupt:
         print("Exiting...")
     finally:
-        GPIO.output(g_led, GPIO.LOW)
+        GPIO.output(g_led, GPIO.LOW) # system has turned off
         GPIO.cleanup()
         print("Finished.")
 
