@@ -25,7 +25,7 @@ def find_drive():
 
 def create_new_folder(base_path, folder_type):
     # creates new folder for either data collection or model prediction
-    timestamp = datetime.now().strftime("%Y_%m_%d,%H:%M:%S")
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
     folder_name = f"{folder_type}_{timestamp}"
     folder_path = os.path.join(base_path, folder_name)
     os.makedirs(folder_path, exist_ok=True)
@@ -37,3 +37,4 @@ def test_find_flashdrive():
     location = find_drive()
     files = os.listdir(location)   
     print(files)
+
