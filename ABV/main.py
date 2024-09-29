@@ -14,7 +14,6 @@ import signal
 
 data_col_pin = 15 # data collection switch
 g_led = 13 # jetson on pin
-b_led = 19 # data-collection running 
 r_led = None # model inference running
 
 data_collection_process = None
@@ -22,11 +21,9 @@ data_collection_process = None
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(data_col_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
 GPIO.setup(g_led, GPIO.OUT)
-GPIO.setup(b_led, GPIO.OUT)
 
 def start_data_collection():
     global data_collection_process
-    GPIO.output(b_led, GPIO.HIGH)
     print("Data collection switch on. Running Data Collection Script..")
     
     if data_collection_process is None: # start subprocess only of not running
@@ -40,7 +37,6 @@ def stop_term_data_collection():
     global data_collection_process
     if data_collection_process:
         data_collection_process.terminate()
-        GPIO.output(b_led, GPIO.LOW)
         try: 
             data_collection_process.wait(timeout=2)
             print("Subprocess terminated")
