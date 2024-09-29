@@ -3,6 +3,8 @@ import cv2
 from nanocamera import Camera
 import os
 import time
+import signal
+import sys
 
 from storage_utils import find_drive, create_new_folder
 
@@ -10,6 +12,20 @@ from storage_utils import find_drive, create_new_folder
     Script for collecting image data and storing onto mounted data
 
 """
+cam = None
+
+def shutdown_signal_handler(signum, frame):
+    print("Shutdown signal received...")
+    shutdown_process()
+    sys.exit(0)  # Ensure the script exits after handling the signal
+
+def shutdown_process():
+    global cam
+    cam.release() 
+
+# Register the shutdown handler for SIGTERM and SIGINT (for Ctrl+C or kill commands)
+signal.signal(signal.SIGTERM, shutdown_signal_handler)
+signal.signal(signal.SIGINT, shutdown_signal_handler)
 
 def run_data_collection(fps=30):
     # collect image data with nanocamera
@@ -26,6 +42,7 @@ def run_data_collection(fps=30):
     frame_delay = 1/fps
 
     # prepare camera for usage!
+    global cam
     cam = Camera(camera_type=0, width=640, height=480, fps=30, enforce_fps=True, debug=True)
     if not cam.isReady():
         print("Camera could not be prepared...")
@@ -49,15 +66,7 @@ def run_data_collection(fps=30):
         print("Finished Data Collection")
     finally:
         print("Releasing camera!")
-        cam.release()          
+        shutdown_process()         
         
-def test_script_run():
-
-    while True:
-        print("finding usb....")
-        location = find_flashdrive()
-        print(location)
-        time.sleep(1)
-
 if __name__ == "__main__":
     run_data_collection()
