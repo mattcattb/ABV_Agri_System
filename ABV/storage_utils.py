@@ -62,6 +62,10 @@ def create_new_folder(base_path, folder_type):
     os.makedirs(folder_path, exist_ok=True)
     return folder_path
 
+def create_img_name():
+    timestamp = datetime.now().strftime("%Y_%m_%d_%H-%M-%S-%f")[:-3]
+    filename = f"{timestamp}.jpg"
+    return filename
 
 def test_find_flashdrive():
     print(find_all_drives())
