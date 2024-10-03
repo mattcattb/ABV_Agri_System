@@ -11,6 +11,9 @@ from storage_utils import find_drive, create_new_folder
 
 """
     Script for collecting image data and storing onto mounted data
+    TODO:
+    - Make light on after camera setup
+    - make green light turn off on any shutdown signal
 
 """
 
@@ -21,10 +24,11 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(b_led, GPIO.OUT)
 
 def shutdown_process():
+
     global cam
     print("DC: shutting down cam and GPIO...")
 
-    print(f"cam: {cam}")
+    print(f"DC: cam: {cam}")
     if cam is not None:
         cam.release()
         print("DC: cam released") 
@@ -51,7 +55,7 @@ fps = 30
 usb_location = find_drive()
 
 if usb_location is None:
-    print("DC ERROR: USB mount not found!")
+    print("DC: ERROR USB mount not found!")
     shutdown_process()
     sys.exit(0)
 
@@ -74,6 +78,7 @@ print("DC: Camera ready!")
 GPIO.output(b_led, GPIO.HIGH)    
 
 while True:
+
     frame = cam.read()
     if frame is not None:
         filename = f"{folder_path}/f{frame_count}.jpg"
