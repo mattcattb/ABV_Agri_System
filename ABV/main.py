@@ -13,16 +13,17 @@ import sys
 
 """
 
-data_col_pin = 15 # data collection switch
+infer_sw = 11
+data_sw = 15 # data collection switch
+
 g_led = 13 # jetson on pin
-r_led = None # model inference running
 
 data_collection_process = None
 
 data_collection_path = "/home/preag/Desktop/ABV_Agri_System/ABV/data_collection.py"
 
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(data_col_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+GPIO.setup(data_sw, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
 GPIO.setup(g_led, GPIO.OUT)
 
 def signal_handler(sig, frame):
@@ -62,7 +63,7 @@ def stop_dcprocess_killpg_wait():
     
   
 def switch_callback(channel):
-    cur_dc_state = GPIO.input(data_col_pin)
+    cur_dc_state = GPIO.input(data_sw)
     if cur_dc_state == GPIO.LOW:  # Switch turned on
         start_dcprocess()
         print("MAIN: starting data collection")
@@ -74,7 +75,7 @@ def main():
     GPIO.output(g_led, GPIO.HIGH)  # System has been turned on!
 
     print("MAIN: Monitoring switch. Press Ctrl+C to exit.")
-    GPIO.add_event_detect(data_col_pin, GPIO.BOTH, callback=switch_callback, bouncetime=300)
+    GPIO.add_event_detect(data_sw, GPIO.BOTH, callback=switch_callback, bouncetime=300)
     
     while True:
         time.sleep(1)  # Keep the main loop running
