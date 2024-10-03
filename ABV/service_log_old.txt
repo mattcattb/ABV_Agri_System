@@ -1,0 +1,119 @@
+Activating Conda environment...
+Working Directory: /home/preag/Desktop/ABV_Agri_System/ABV
+Environment Variables: CONDA_SHLVL=1
+CONDA_EXE=/home/preag/archiconda3/bin/conda
+LANG=en_US.UTF-8
+INVOCATION_ID=7c4c77318f444b68a6411a50633c14d8
+CONDA_PREFIX=/home/preag/archiconda3/envs/env369
+PWD=/home/preag/Desktop/ABV_Agri_System/ABV
+CONDA_PYTHON_EXE=/home/preag/archiconda3/bin/python
+JOURNAL_STREAM=8:128101
+CONDA_PROMPT_MODIFIER=(env369) 
+SHLVL=2
+PATH=/home/preag/archiconda3/envs/env369/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+CONDA_DEFAULT_ENV=env369
+_=/usr/bin/env
+beginning running the main service script!
+Python script failed
+Activating Conda environment...
+Working Directory: /home/preag/Desktop/ABV_Agri_System/ABV
+Environment Variables: CONDA_SHLVL=1
+CONDA_EXE=/home/preag/archiconda3/bin/conda
+LANG=en_US.UTF-8
+INVOCATION_ID=861fb1bfd1224d88b1e816a5e9fd28e7
+CONDA_PREFIX=/home/preag/archiconda3/envs/env369
+PWD=/home/preag/Desktop/ABV_Agri_System/ABV
+CONDA_PYTHON_EXE=/home/preag/archiconda3/bin/python
+JOURNAL_STREAM=8:126721
+CONDA_PROMPT_MODIFIER=(env369) 
+SHLVL=2
+PATH=/home/preag/archiconda3/envs/env369/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+CONDA_DEFAULT_ENV=env369
+_=/usr/bin/env
+beginning running the main service script!
+Python script failed
+Activating Conda environment...
+Working Directory: /home/preag/Desktop/ABV_Agri_System/ABV
+Environment Variables: CONDA_SHLVL=1
+CONDA_EXE=/home/preag/archiconda3/bin/conda
+LANG=en_US.UTF-8
+INVOCATION_ID=228b5abbc9814e6399b1ce8245a7ddd2
+CONDA_PREFIX=/home/preag/archiconda3/envs/env369
+PWD=/home/preag/Desktop/ABV_Agri_System/ABV
+CONDA_PYTHON_EXE=/home/preag/archiconda3/bin/python
+JOURNAL_STREAM=8:128916
+CONDA_PROMPT_MODIFIER=(env369) 
+SHLVL=2
+PATH=/home/preag/archiconda3/envs/env369/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+CONDA_DEFAULT_ENV=env369
+_=/usr/bin/env
+beginning running the main service script!
+/home/preag/archiconda3/envs/env369/lib/python3.6/site-packages/Jetson/GPIO/gpio.py:345: UserWarning: Jetson.GPIO ignores setup()'s pull_up_down parameter
+  warnings.warn("Jetson.GPIO ignores setup()'s pull_up_down parameter")
+Monitoring switch. Press Ctrl+C to exit.
+Data collection switch on. Running Data Collection Script..
+starting data collection
+stopping data collection
+Stopping the data collection script...
+Data collection switch on. Running Data Collection Script..
+starting data collection
+Termination signal received. Cleaning up...
+Stopping the data collection script...
+Activating Conda environment...
+Working Directory: /home/preag/Desktop/ABV_Agri_System/ABV
+Environment Variables: CONDA_SHLVL=1
+CONDA_EXE=/home/preag/archiconda3/bin/conda
+LANG=en_US.UTF-8
+INVOCATION_ID=d2e6a4c2ff3c41b9bc01f1fe804a8346
+CONDA_PREFIX=/home/preag/archiconda3/envs/env369
+PWD=/home/preag/Desktop/ABV_Agri_System/ABV
+CONDA_PYTHON_EXE=/home/preag/archiconda3/bin/python
+JOURNAL_STREAM=8:129399
+CONDA_PROMPT_MODIFIER=(env369) 
+SHLVL=2
+PATH=/home/preag/archiconda3/envs/env369/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+CONDA_DEFAULT_ENV=env369
+_=/usr/bin/env
+beginning running the main service script!
+/home/preag/archiconda3/envs/env369/lib/python3.6/site-packages/Jetson/GPIO/gpio.py:345: UserWarning: Jetson.GPIO ignores setup()'s pull_up_down parameter
+  warnings.warn("Jetson.GPIO ignores setup()'s pull_up_down parameter")
+Monitoring switch. Press Ctrl+C to exit.
+Data collection switch on. Running Data Collection Script..
+starting data collection
+stopping data collection
+Stopping the data collection script...
+Termination signal received. Cleaning up...
+Activating Conda environment...
+Working Directory: /home/preag/Desktop/ABV_Agri_System/ABV
+Environment Variables: CONDA_SHLVL=1
+CONDA_EXE=/home/preag/archiconda3/bin/conda
+LANG=en_US.UTF-8
+INVOCATION_ID=d60cd165d71d489193c230715f41cf4e
+CONDA_PREFIX=/home/preag/archiconda3/envs/env369
+PWD=/home/preag/Desktop/ABV_Agri_System/ABV
+CONDA_PYTHON_EXE=/home/preag/archiconda3/bin/python
+JOURNAL_STREAM=8:132521
+CONDA_PROMPT_MODIFIER=(env369) 
+SHLVL=2
+PATH=/home/preag/archiconda3/envs/env369/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+CONDA_DEFAULT_ENV=env369
+_=/usr/bin/env
+beginning running the main service script!
+Python script failed
+Activating Conda environment...
+Working Directory: /home/preag/Desktop/ABV_Agri_System/ABV
+Environment Variables: CONDA_SHLVL=1
+CONDA_EXE=/home/preag/archiconda3/bin/conda
+LANG=en_US.UTF-8
+INVOCATION_ID=d5695f8d54b544219ccbfe08b9744d7e
+CONDA_PREFIX=/home/preag/archiconda3/envs/env369
+PWD=/home/preag/Desktop/ABV_Agri_System/ABV
+CONDA_PYTHON_EXE=/home/preag/archiconda3/bin/python
+JOURNAL_STREAM=8:130667
+CONDA_PROMPT_MODIFIER=(env369) 
+SHLVL=2
+PATH=/home/preag/archiconda3/envs/env369/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin
+CONDA_DEFAULT_ENV=env369
+_=/usr/bin/env
+beginning running the main service script!
+Python script failed

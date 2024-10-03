@@ -18,9 +18,8 @@ def find_drive():
 
     if san_disk_mounts:
         return san_disk_mounts[0].strip()  # Return the first SanDisk mount point
+    #! Make work with any disk not just sandisk
 
-    return None
-    
     return None
 
 def create_new_folder(base_path, folder_type):
