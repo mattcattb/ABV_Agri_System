@@ -5,6 +5,7 @@ import time
 import subprocess
 import os
 import signal
+import sys
 
 """
     Controller script that runs on startup.
@@ -18,100 +19,68 @@ r_led = None # model inference running
 
 data_collection_process = None
 
+data_collection_path = "/home/preag/Desktop/ABV_Agri_System/ABV/data_collection.py"
+
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(data_col_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
 GPIO.setup(g_led, GPIO.OUT)
 
-def start_data_collection():
+def signal_handler(sig, frame):
+    print("MAIN:Termination signal received. Cleaning up...")
+    stop_dcprocess_killpg_wait()
+    GPIO.output(g_led, GPIO.LOW) # system has turned off
+    GPIO.cleanup()
+    sys.exit(0)
+    
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+def start_dcprocess():
     global data_collection_process
-    print("Data collection switch on. Running Data Collection Script..")
+    print("MAIN: Data collection switch on. Running Data Collection Script..")
     
     if data_collection_process is None: # start subprocess only of not running
         try:
-            data_collection_process = subprocess.Popen(["python3", "data_collection.py"])
+            data_collection_process = subprocess.Popen(["python3", data_collection_path],preexec_fn=os.setpgrp)
         except Exception as e:
-            print(f"Error starting data collection: {e}")
-            
-def stop_term_data_collection():
-    # use process terminate to stop exterior script
-    global data_collection_process
-    if data_collection_process:
-        data_collection_process.terminate()
-        try: 
-            data_collection_process.wait(timeout=2)
-            print("Subprocess terminated")
-        except subprocess.TimeoutExpired:
-            print("Subprocess did not terminate in time. Killing process.")
-            data_collection_process.kill()
-    
-    data_collection_process = None
+            print("MAIN: Error starting data collection")
 
-def stop_kill_data_collection():
-    # use OS to stop the exterior script
+def stop_dcprocess_killpg_wait():
+    # sending SIGTERM to entire process kill
     global data_collection_process
     if data_collection_process is not None:
-        print("Stopping the second script...")
-        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-        process = None
-
-def main():
-
-    cur_dc_state = GPIO.input(data_col_pin)
-    dc_on_state = GPIO.LOW if cur_dc_state == GPIO.HIGH else GPIO.HIGH
-    last_dc_state = cur_dc_state 
-    GPIO.output(g_led, GPIO.HIGH) # system has been turned on!
-
-    try:
-        print("Monitoring switch. Press Ctrl+C to exit.")
-        while True:
-            
-            cur_dc_state = GPIO.input(data_col_pin) # current datacollection switch state
-            
-            if cur_dc_state != last_dc_state:
-                # data collection switch was toggled!
-                if cur_dc_state == dc_on_state:
-                    start_data_collection()
-                else:
-                    stop_data_collection()
-            
-            last_dc_state = cur_dc_state
-            
-            time.sleep(0.1)
-
-    except KeyboardInterrupt:
-        print("Exiting...")
-    finally:
-        GPIO.output(g_led, GPIO.LOW) # system has turned off
-        GPIO.cleanup()
-        print("Finished.")
+        print("MAIN: Stopping the data collection script...")
+        os.killpg(os.getpgid(data_collection_process.pid), signal.SIGTERM)
+        try:
+            # longer wait for termination
+            data_collection_process.wait(timeout=5)  # Adjust the timeout as needed
+        except subprocess.TimeoutExpired:
+            print("MAIN: Subprocess did not terminate in time. Killing process.")
+            data_collection_process.kill()
+        finally:
+            data_collection_process = None
+    
   
 def switch_callback(channel):
     cur_dc_state = GPIO.input(data_col_pin)
     if cur_dc_state == GPIO.LOW:  # Switch turned on
-        # start_data_collection()
-        print("starting data collection")
+        start_dcprocess()
+        print("MAIN: starting data collection")
     else:  # Switch turned off
-        print("stopping data collection")
-        # stop_data_collection()  
+        print("MAIN: stopping data collection")
+        stop_dcprocess_killpg_wait()  
         
-def main_using_callbacks():
+def main():
     GPIO.output(g_led, GPIO.HIGH)  # System has been turned on!
-    
-    try:
-        print("Monitoring switch. Press Ctrl+C to exit.")
-        GPIO.add_event_detect(data_col_pin, GPIO.BOTH, callback=switch_callback, bouncetime=300)
-        
-        while True:
-            time.sleep(1)  # Keep the main loop running
 
-    except KeyboardInterrupt:
-        print("Exiting...")
-    finally:
-        GPIO.output(g_led, GPIO.LOW)  # System has turned off
-        GPIO.cleanup()
-        print("Finished.")
+    print("MAIN: Monitoring switch. Press Ctrl+C to exit.")
+    GPIO.add_event_detect(data_col_pin, GPIO.BOTH, callback=switch_callback, bouncetime=300)
+    
+    while True:
+        time.sleep(1)  # Keep the main loop running
+
 
 if __name__ == "__main__":
-    main_using_callbacks()        
+    main()        
 
     
