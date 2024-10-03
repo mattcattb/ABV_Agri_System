@@ -8,10 +8,31 @@ This project has 2 switch parts:
 - Data Collection Switch: Activates and saves images at 30FPS to external storage on toggle. 
 - Model Prediction Switch: (In Progress) Runs YOLOv8 image prediction model every 5 seconds, saving on external storage.
 
-## Setup
+## Control Flow
+
+**Green:** Main System Running <br>
+**Blue:** Data Collection script on, taking images and storing onto hardrive<br>
+**Red:** YOLO Model making inferences <br>
+<p>
+L_Switch: Begin Data Collection <br>
+R_Switch: Begin Inferencing <br>
+<p>
+
+**Do not turn on both at once!** <br>
+This will lead to infernece mode, which will force you to turn off both switches before continuing. 
+
+## Requirements
 
 ### Hardware Requirements
 - Jetson Nano (Jetpack SDK)
 - USB Camera
+- Red, Blue, Green RGB
+- 2 Switches
 
 ### Software Requirements
+- Cv2
+- Archiconda
+- Python 3.6.9
+- Services
+
+
