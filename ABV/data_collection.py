@@ -11,9 +11,6 @@ from storage_utils import choose_drive, create_new_folder
 
 """
     Script for collecting image data and storing onto mounted data
-    TODO:
-    - Make light on after camera setup
-    - make green light turn off on any shutdown signal
 
 """
 
