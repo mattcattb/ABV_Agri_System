@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOGFILE="/home/preag/Desktop/ABV_Agri_System/ABV/service_log.txt"
+LOGFILE="/home/preag/Desktop/ABV_Agri_System/logs/service_log.txt"
 
 # Activate the Conda environment and log output
 echo "Activating Conda environment..." >> "$LOGFILE" 2>&1

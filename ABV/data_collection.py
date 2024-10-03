@@ -7,13 +7,10 @@ import time
 import signal
 import sys
 
-from storage_utils import find_drive, create_new_folder
+from storage_utils import choose_drive, create_new_folder
 
 """
     Script for collecting image data and storing onto mounted data
-    TODO:
-    - Make light on after camera setup
-    - make green light turn off on any shutdown signal
 
 """
 
@@ -52,7 +49,7 @@ signal.signal(signal.SIGINT, shutdown_signal_handler)
 fps = 30
 
 # collect image data with nanocamera
-usb_location = find_drive()
+usb_location = choose_drive()
 
 if usb_location is None:
     print("DC: ERROR USB mount not found!")

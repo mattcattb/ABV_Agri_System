@@ -7,6 +7,7 @@ from datetime import datetime
     Funtions for linux directory storage functionality.
 """
 
+DEFAULT_MIN_SPACE = 1000
 
 def find_drive():
     # Finds flashdrive location
@@ -22,6 +23,37 @@ def find_drive():
 
     return None
 
+def find_all_drives():
+    # Finds all mounted drive locations
+    output = subprocess.check_output("lsblk -o MOUNTPOINT", shell=True).decode()
+    mount_points = [
+        line for line in output.split('\n') 
+        if line.strip() and not line.startswith('MOUNTPOINT') and 'l4T-README' not in line and line != '/' and '[SWAP]' not in line]
+
+    return mount_points
+
+def get_free_space(mount_point):
+    # Get free space in bytes using os.statvfs
+    stat = os.statvfs(mount_point)
+    free_space = stat.f_bavail * stat.f_frsize  # Available blocks * block size
+    return free_space
+
+def choose_drive(min_space_required=DEFAULT_MIN_SPACE):
+    # min_space is in bytes
+    drives = find_all_drives()
+    
+    for drive in drives:
+        free_space = get_free_space(drive)
+        
+        # Print info for debugging
+        print(f"Drive {drive} has {free_space / (1024**3):.2f} GB free")
+
+        # Check if free space meets minimum requirement
+        if free_space >= min_space_required:
+            return drive  # Return the first drive with enough space
+    
+    return None  # Return None if no drive meets the space requirement
+
 def create_new_folder(base_path, folder_type):
     # creates new folder for either data collection or model prediction
     timestamp = datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
@@ -32,8 +64,10 @@ def create_new_folder(base_path, folder_type):
 
 
 def test_find_flashdrive():
-
-    location = find_drive()
+    print(find_all_drives())
+    location = choose_drive()
     files = os.listdir(location)   
     print(files)
 
+if __name__ == "__main__":
+    test_find_flashdrive()
