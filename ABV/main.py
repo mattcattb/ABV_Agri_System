@@ -36,27 +36,33 @@ blinking = False
 fps = 30
 
 def blink_leds():
-
     """Function to blink LEDs based on switch states."""
     global blinking
     while blinking:
         # Check the state of the switches
         if GPIO.input(data_sw) == GPIO.HIGH:
+            # Blink the data collection LED
             GPIO.output(dc_led, GPIO.HIGH)
-        else:
+            time.sleep(0.1)
             GPIO.output(dc_led, GPIO.LOW)
+        else:
+            GPIO.output(dc_led, GPIO.LOW)  # Ensure it's off when switch is off
 
         if GPIO.input(infer_sw) == GPIO.HIGH:
+            # Blink the inference LED
             GPIO.output(inf_led, GPIO.HIGH)
-        else:
+            time.sleep(0.1)
             GPIO.output(inf_led, GPIO.LOW)
+        else:
+            GPIO.output(inf_led, GPIO.LOW)  # Ensure it's off when switch is off
 
-        # Introduce a delay for blinking effect
-        time.sleep(0.5)  # Adjust the de
+        # Introduce a delay before the next blink cycle
+        time.sleep(0.2) 
+        
 
 def block_till_both_off():
     # wait until both turned off
-    
+    print("BLOCKING: Waiting till both switches are off.")
     global blinking
     blinking = True
     
@@ -67,6 +73,8 @@ def block_till_both_off():
     
         if GPIO.input(data_sw) == GPIO.LOW and GPIO.input(infer_sw) == GPIO.LOW:
             break
+            
+    print("BLOCKING: Both switches have been turned off.")
     
     blinking = False
     blink_thread.join() # wait for blinking thread to finish and then join
@@ -91,21 +99,22 @@ def setup_process():
     cam = Camera(camera_type=0, width=640, height=480, fps=30, enforce_fps=True, debug=True)
     
     if not cam.isReady():
-        print("DC ERROR: Camera could not be prepared...")
+        print("MAIN ERROR: Camera could not be prepared...")
         shutdown_process()
         sys.exit(0)
-
+    print("MAIN SETUP: Camera module setup!")
     usb_location = choose_drive()
     if usb_location is None:
-        print("DC: ERROR USB mount not found!")
+        print("MAIN ERROR: USB mount not found!")
         shutdown_process()
         sys.exit(0)
         
-    block_till_both_off() # wait till both switches are turned off
-
     save_location = create_new_folder(usb_location)
-    print(f"DC: Saving images to {save_location}")
-
+    print(f"MAIN SETUP: Set to save images to {save_location}")
+    
+    # only proceed if both switches turned off
+    if GPIO.input(infer_sw) == GPIO.HIGH or GPIO.input(data_sw) == GPIO.HIGH:    
+        block_till_both_off() # wait till both switches are turned off
 
 def shutdown_process():
     global cam
@@ -142,14 +151,8 @@ def handle_error_section():
     print("ERROR: Both switches are on!")
     # Blink both LEDs until both switches are turned off
     error_blocking = True
-    
-    while GPIO.input(data_sw) == GPIO.HIGH and GPIO.input(infer_sw) == GPIO.HIGH:
-        GPIO.output(dc_led, GPIO.HIGH)
-        GPIO.output(inf_led, GPIO.HIGH)
-        time.sleep(0.5)
-        GPIO.output(dc_led, GPIO.LOW)
-        GPIO.output(inf_led, GPIO.LOW)
-        time.sleep(0.5)
+    print("ERROR: Please switch both switches off to continue.")
+    block_till_both_off()
         
     error_blocking = False
     print("ERROR: Resolved by turning off one or both switches.")
@@ -158,14 +161,16 @@ def data_collection_function(channel):
     # Perform Data Collection with Camera
     
     global cam, fps, save_location, error_blocking
-    if is_both_on():
-        handle_error_section()
+    
+    if error_blocking:
+        return
+    
     elif GPIO.input(channel) == GPIO.LOW:
         # switch turned off
         print("DC: stopping data collection")
         GPIO.output(dc_led, GPIO.LOW)
 
-    elif GPIO.input(channel) == GPIO.HIGH and not error_blocking:
+    elif GPIO.input(channel) == GPIO.HIGH:
         # data collection switch turned on!!
         print("DC: starting data collection")
         if not error_blocking:
@@ -189,14 +194,14 @@ def inference_function(channel):
     
     global error_blocking
     
-    if is_both_on():
-        handle_error_section()
+    if error_blocking:
+        return
     
     elif GPIO.input(channel) == GPIO.LOW:
         print("INF: stopped inferencing")
         GPIO.output(inf_led, GPIO.LOW)
     
-    elif GPIO.input(channel) == GPIO.HIGH and not error_blocking:
+    elif GPIO.input(channel) == GPIO.HIGH:
         print("INF: began inferencing")
         GPIO.output(inf_led, GPIO.HIGH)
         # run model inference
@@ -214,7 +219,7 @@ def main():
     GPIO.add_event_callback(channel= data_sw, callback=data_collection_function, )
     GPIO.add_event_callback(channel=infer_sw, callback=inference_function)
     
-    print("MAIN: Monitoring switch. Press Ctrl+C to exit.")
+    print("MAIN: Reached main loop. Press Ctrl+C to exit.")
     
     while True:
         time.sleep(0.01)  # Keep the main loop running
