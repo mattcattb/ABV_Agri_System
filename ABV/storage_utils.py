@@ -54,10 +54,10 @@ def choose_drive(min_space_required=DEFAULT_MIN_SPACE):
     
     return None  # Return None if no drive meets the space requirement
 
-def create_new_folder(base_path, folder_type):
+def create_new_folder(base_path, folder_name="storage"):
     # creates new folder for either data collection or model prediction
     timestamp = datetime.now().strftime("%Y_%m_%d_%H-%M-%S")
-    folder_name = f"{folder_type}_{timestamp}"
+    folder_name = f"{folder_name}_{timestamp}"
     folder_path = os.path.join(base_path, folder_name)
     os.makedirs(folder_path, exist_ok=True)
     return folder_path
