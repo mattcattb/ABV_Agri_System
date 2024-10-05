@@ -7,7 +7,7 @@ from datetime import datetime
     Funtions for linux directory storage functionality.
 """
 
-DEFAULT_MIN_SPACE = 1000
+DEFAULT_MIN_SPACE = 1
 
 def find_drive():
     # Finds flashdrive location
@@ -45,9 +45,6 @@ def choose_drive(min_space_required=DEFAULT_MIN_SPACE):
     for drive in drives:
         free_space = get_free_space(drive)
         
-        # Print info for debugging
-        print(f"Drive {drive} has {free_space / (1024**3):.2f} GB free")
-
         # Check if free space meets minimum requirement
         if free_space >= min_space_required:
             return drive  # Return the first drive with enough space
