@@ -99,18 +99,19 @@ def setup_process():
     cam = Camera(camera_type=0, width=640, height=480, fps=30, enforce_fps=True, debug=True)
     
     if not cam.isReady():
-        print("MAIN ERROR: Camera could not be prepared...")
+        print("SETUP ERROR: Camera could not be prepared...")
         shutdown_process()
         sys.exit(0)
-    print("MAIN SETUP: Camera module setup!")
+        
+    print("SETUP: Camera module setup!")
     usb_location = choose_drive()
     if usb_location is None:
-        print("MAIN ERROR: USB mount not found!")
+        print("SETUP ERROR: USB mount not found!")
         shutdown_process()
         sys.exit(0)
         
     save_location = create_new_folder(usb_location)
-    print(f"MAIN SETUP: Set to save images to {save_location}")
+    print(f"SETUP: Set to save images to {save_location}")
     
     # only proceed if both switches turned off
     if GPIO.input(infer_sw) == GPIO.HIGH or GPIO.input(data_sw) == GPIO.HIGH:    
@@ -118,11 +119,11 @@ def setup_process():
 
 def shutdown_process():
     global cam
-    print("Entering Setup Process")
+    print("SHUTDOWN: Entering Shutdown Process")
 
     if cam is not None:
         cam.release()
-        print("cam released")     
+        print("SHUTDOWN: cam released")     
 
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
