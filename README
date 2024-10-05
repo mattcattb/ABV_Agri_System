@@ -36,5 +36,6 @@ This will lead to infernece mode, which will force you to turn off both switches
 - Archiconda
 - Python 3.6.9
 - Services
+- python3-jetson-gpio
 
 
