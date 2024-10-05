@@ -29,9 +29,10 @@ inf_led = 29 # camera is inferencing (red)
 data_collection_process = None
 cam = None
 save_location = None
-error_blocking = False
 
+error_blocking = False
 blinking = False
+running = False
 
 fps = 30
 
@@ -83,7 +84,7 @@ def block_till_both_off():
 
 def setup_process():
     # todo wait till both switches are in the down position!
-    global cam, save_location
+    global cam, save_location, running
     GPIO.setmode(GPIO.BOARD)
     
     GPIO.setup(data_sw, GPIO.IN) 
@@ -105,10 +106,13 @@ def setup_process():
         
     print("SETUP: Camera module setup!")
     usb_location = choose_drive()
-    if usb_location is None:
+    
+    # TODO make a seperate modularized function 
+    while usb_location is None:        
         print("SETUP ERROR: USB mount not found!")
-        shutdown_process()
-        sys.exit(0)
+        print("SETUP: Looking again for usb mount...")
+        time.sleep(3)
+        usb_location = choose_drive()
         
     save_location = create_new_folder(usb_location)
     print(f"SETUP: Set to save images to {save_location}")
@@ -116,15 +120,16 @@ def setup_process():
     # only proceed if both switches turned off
     if GPIO.input(infer_sw) == GPIO.HIGH or GPIO.input(data_sw) == GPIO.HIGH:    
         block_till_both_off() # wait till both switches are turned off
+    running = True
 
 def shutdown_process():
-    global cam
+    global cam, running
     print("SHUTDOWN: Entering Shutdown Process")
 
     if cam is not None:
         cam.release()
         print("SHUTDOWN: cam released")     
-
+    running = False
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
     GPIO.output(on_led, GPIO.LOW) # system has turned off
@@ -135,16 +140,10 @@ def signal_handler(sig, frame):
     print("MAIN: Termination signal received. Cleaning up...")
     shutdown_process()
     sys.exit(0)
-    
+
 signal.signal(signal.SIGTERM, signal_handler)
-signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)  
     
-def is_both_on():
-    if (GPIO.input(data_sw) == GPIO.HIGH and GPIO.input(inf_led) == GPIO.HIGH):
-        return True
-    else:
-        return False        
-        
 def handle_error_section():
     # this section runs if both switches are on... do not want this to happen!
     
@@ -156,7 +155,7 @@ def handle_error_section():
     block_till_both_off()
         
     error_blocking = False
-    print("ERROR: Resolved by turning off one or both switches.")
+    print("ERROR: Resolved by turning off both switches.")
 
 def data_collection_function(channel):
     # Perform Data Collection with Camera
@@ -178,7 +177,7 @@ def data_collection_function(channel):
             GPIO.output(dc_led, GPIO.HIGH)
         frame_delay = 1/fps
 
-        while GPIO.input(data_sw) == GPIO.HIGH and not error_blocking:
+        while GPIO.input(data_sw) == GPIO.HIGH and not error_blocking and running:
             frame = cam.read()
             if frame is not None:
                 filename = create_img_name()
@@ -206,7 +205,7 @@ def inference_function(channel):
         print("INF: began inferencing")
         GPIO.output(inf_led, GPIO.HIGH)
         # run model inference
-        while GPIO.input(infer_sw) == GPIO.HIGH and not error_blocking:
+        while GPIO.input(infer_sw) == GPIO.HIGH and not error_blocking and running:
             print("INF: running inference stuff!")
             time.sleep(0.1)
         
@@ -224,7 +223,7 @@ def main():
     
     while True:
         time.sleep(0.01)  # Keep the main loop running
-        if is_both_on():
+        if (GPIO.input(data_sw) == GPIO.HIGH and GPIO.input(inf_led) == GPIO.HIGH):
             handle_error_section()
 
 if __name__ == "__main__":
