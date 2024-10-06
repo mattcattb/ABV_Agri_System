@@ -1,29 +1,32 @@
 #!/bin/bash
 
+# Set up log files
 TIMESTAMP=$(date +"%Y%m%d_%H-%M-%S")
-LOGFILE="/home/preag/Desktop/ABV_Agri_System/logs/$TIMESTAMP=script.txt"
+LOGFILE="/home/preag/Desktop/ABV_Agri_System/logs/$TIMESTAMP=script.log"
+
+# Log function
+log() {
+    echo "[$(date +"%Y-%m-%d %H:%M:%S")] $1" >> "$LOGFILE"
+}
+
+# Start logging
+log "Starting the ABV Startup Service"
 
 # Activate the Conda environment and log output
-echo "Activating Conda environment at $TIMESTAMP============" >> "$LOGFILE" 2>&1
+log "Activating Conda environment..."
 source /home/preag/archiconda3/etc/profile.d/conda.sh >> "$LOGFILE" 2>&1
 conda activate env369 >> "$LOGFILE" 2>&1
-if [ $? -ne 0 ]; then
-    echo "Failed to activate environment" >> "$LOGFILE"
-    exit 1
-fi
+log "Conda environment activated: $CONDA_DEFAULT_ENV"
 
 # Log the current directory and environment variables
-echo "Working Directory: $(pwd)" >> "$LOGFILE"
+log "Working Directory: $(pwd)"
+log "Running the main service script!"
 
-echo "beginning running the main service script!" >> "$LOGFILE" 2>&1
-echo "$TIMESTAMP" >> "$LOGFILE" 2>&1
 # Run the Python script and redirect output
-PYLOGFILE="/home/preag/Desktop/ABV_Agri_System/logs/$TIMESTAMP=py.txt"
-sudo python3 /home/preag/Desktop/ABV_Agri_System/ABV/main.py >> "$PYLOGFILE" 2>&1
+/home/preag/archiconda3/envs/env369/bin/python /home/preag/Desktop/ABV_Agri_System/ABV/main.py 
 if [ $? -ne 0 ]; then
-    echo "Python script failed ============" >> "$LOGFILE"
+    log "Python script failed!"
     exit 1
 fi
 
-echo "Script completed successfully ============" >> "$LOGFILE"
-
+log "Script completed successfully."
