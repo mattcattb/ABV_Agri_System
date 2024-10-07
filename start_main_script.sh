@@ -10,7 +10,7 @@ log() {
 }
 
 # Start logging
-log "Starting the ABV Startup Service"
+log "Starting the ABV Script"
 
 # Activate the Conda environment and log output
 log "Activating Conda environment..."
@@ -23,9 +23,13 @@ log "Working Directory: $(pwd)"
 log "Running the main service script!"
 
 # Run the Python script and redirect output
-/home/preag/archiconda3/envs/env369/bin/python /home/preag/Desktop/ABV_Agri_System/ABV/main.py 
+{
+    OPENBLAS_CORETYPE=ARMV8 /home/preag/archiconda3/envs/env369/bin/python /home/preag/Desktop/ABV_Agri_System/ABV/main.py
+} >> "$LOGFILE" 2>&1
+
+# Check if the Python script failed
 if [ $? -ne 0 ]; then
-    log "Python script failed!"
+    log "Python script failed! See log for details."
     exit 1
 fi
 
