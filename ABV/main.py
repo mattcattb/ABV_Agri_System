@@ -1,5 +1,7 @@
+
 # -*- coding: utf-8 -*-
 
+import logging
 import Jetson.GPIO as GPIO
 import time 
 import signal
@@ -7,14 +9,16 @@ import sys
 import cv2
 from nanocamera import Camera
 import threading
-import logging
+
 
 # Set up logging
+"""
 logging.basicConfig(
     filename='/home/preag/Desktop/ABV_Agri_System/logs/python_script.log',
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
 
 # Function to redirect print statements to logging
 class PrintLogger:
@@ -26,9 +30,11 @@ class PrintLogger:
     def flush(self):  # Required for Python 3 compatibility
         pass
 
+
 # Redirect stdout and stderr to PrintLogger
 sys.stdout = PrintLogger()
 sys.stderr = PrintLogger()  # Redirect stderr to logging as well
+"""
 
 from storage_utils import choose_drive, create_new_folder, create_img_name
 
@@ -105,6 +111,7 @@ def block_till_both_off():
 
 def setup_process():
     global cam, save_location, running
+    print("doing things")
     GPIO.setmode(GPIO.BOARD)
     
     GPIO.setup(data_sw, GPIO.IN) 
@@ -123,7 +130,7 @@ def setup_process():
         print("SETUP ERROR: Camera could not be prepared...")
         shutdown_process()
         sys.exit(0)
-        
+
     print("SETUP: Camera module setup!")
     usb_location = choose_drive()
     
@@ -142,12 +149,15 @@ def setup_process():
     running = True
 
 def shutdown_process():
-    global cam, running
+    global cam 
+    global running
     print("SHUTDOWN: Entering Shutdown Process")
 
     if cam is not None:
         cam.release()
         print("SHUTDOWN: cam released")     
+    
+    
     running = False
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
@@ -176,7 +186,8 @@ def handle_error_section():
 
 def data_collection_function(channel):
     # Perform Data Collection with Camera
-    global cam, fps, save_location, error_blocking
+    global cam
+    global fps, save_location, error_blocking
     
     if error_blocking:
         return
@@ -225,6 +236,7 @@ def inference_function(channel):
             time.sleep(0.1)
 
 def main():
+    print("STARTING NEW ABV SYSTEM RUN ==========================")
     setup_process()
     GPIO.output(on_led, GPIO.HIGH)  # System has been turned on!
 
@@ -243,9 +255,10 @@ def main():
 
 if __name__ == "__main__":
 
-    try:
-        main()  
-    except Exception as e:
-        logging.error("An error occurred: %s", str(e))
+   
+    main()  
 
-    logging.info("Script completed successfully.")
+
+	# logging.error("An error occurred: %s", str(e))
+
+    # logging.info("Script completed successfully.")
