@@ -1,19 +1,11 @@
 from nanocamera import Camera
-import cv2
+import time
 
-def test_single_save():
-    cam = Camera()
-    frame = cam.read()
-    if frame is None:
-        print("failed to print")
-    else:
-        cv2.imwrite("test_frame.jpg", frame)
+cam = Camera(camera_type=0, width=640, height=480, fps=30)
 
+if cam.isReady():
+    print("Cam Ready")
+else:
+    print("fail")
 
-def main():
-    test_single_save()
-
-
-if __name__ == "__main__":
-
-	main()
+cam.release()
