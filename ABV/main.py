@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 import logging
@@ -9,44 +8,16 @@ import sys
 import cv2
 from nanocamera import Camera
 import threading
+import json  # Import the json module
 
+import os
+from datetime import datetime
 
-# Set up logging
-"""
-logging.basicConfig(
-    filename='/home/preag/Desktop/ABV_Agri_System/logs/python_script.log',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+from storage import choose_drive, create_img_name
 
+import storage
 
-# Function to redirect print statements to logging
-class PrintLogger:
-    def write(self, message):
-        # Log only if the message is not empty or a newline
-        if message.strip():
-            logging.info(message.strip())
-
-    def flush(self):  # Required for Python 3 compatibility
-        pass
-
-
-# Redirect stdout and stderr to PrintLogger
-sys.stdout = PrintLogger()
-sys.stderr = PrintLogger()  # Redirect stderr to logging as well
-"""
-
-from storage_utils import choose_drive, create_new_folder, create_img_name
 from yolo_utils import load_yolo
-
-"""
-    Controller script that runs on startup.
-    Starts Data_Collection script based on if toggle is flipped.
-
-    TODO: Add a config file for setting up camera and other options
-    TODO: make smoother with... state machine?
-    TODO: fix weird blocking behavior
-"""
 
 infer_sw = 11 # inference switch
 data_sw = 15 # data collection switch
@@ -57,7 +28,7 @@ inf_led = 29 # camera is inferencing (red)
 
 data_collection_process = None
 cam = None
-save_location = None
+run_folder = None  # To store the run folder path
 
 error_blocking = False
 blinking = False
@@ -114,7 +85,7 @@ def block_till_both_off():
     GPIO.output(inf_led, GPIO.LOW)
 
 def setup_process():
-    global cam, save_location, running, model
+    global cam, run_folder, running, model
     print("doing things")
     GPIO.setmode(GPIO.BOARD)
     
@@ -143,9 +114,9 @@ def setup_process():
         print("SETUP: Looking again for usb mount...")
         time.sleep(3)
         usb_location = choose_drive()
-        
-    save_location = create_new_folder(usb_location)
-    print(f"SETUP: Set to save images to {save_location}")
+
+    run_folder = storage.create_run_folder(usb_location)        
+    print(f"SETUP: Run folder is {run_folder}")
     
     print("SETUP: Setting up model!")
     model = load_yolo(models_dir_path, model_type='n')
@@ -161,14 +132,12 @@ def setup_process():
     running = True
 
 def shutdown_process():
-    global cam 
-    global running
+    global cam, running
     print("SHUTDOWN: Entering Shutdown Process")
 
     if cam is not None:
         cam.release()
         print("SHUTDOWN: cam released")     
-    
     
     running = False
     GPIO.output(dc_led, GPIO.LOW)
@@ -198,8 +167,7 @@ def handle_error_section():
 
 def data_collection_function(channel):
     # Perform Data Collection with Camera
-    global cam
-    global fps, save_location, error_blocking
+    global cam, fps, error_blocking
     
     if error_blocking:
         return
@@ -212,6 +180,9 @@ def data_collection_function(channel):
     elif GPIO.input(channel) == GPIO.HIGH:
         # Data collection switch turned on
         print("DC: starting data collection")
+        dc_folder = storage.create_data_collection_folder(run_folder)
+        print(f"DC: Storing camera data to {dc_folder}")
+        
         if not error_blocking:
             GPIO.output(dc_led, GPIO.HIGH)
         frame_delay = 1 / fps
@@ -220,7 +191,7 @@ def data_collection_function(channel):
             frame = cam.read()
             if frame is not None:
                 filename = create_img_name()
-                img_location = f"{save_location}/f{filename}.jpg"
+                img_location = f"{dc_folder}/f{filename}.jpg"
                 try: 
                     cv2.imwrite(img_location, frame)
                     print(f"DC: saved to {img_location}")
@@ -229,25 +200,71 @@ def data_collection_function(channel):
             time.sleep(frame_delay)    
         GPIO.output(dc_led, GPIO.LOW)
 
+# Function to save results to JSON
+def save_result_to_json(results, json_path):
+    """
+    Save the inference results to a JSON file.
+
+    Args:
+        results (dict): The inference results to save.
+        json_path (str): The path where the JSON file will be saved.
+    """
+    try:
+        with open(json_path, 'w') as json_file:
+            json.dump(results, json_file)
+        print(f"INF: Saved results to {json_path}")
+    except Exception as e:
+        print(f"INF ERROR: Failed to save JSON result: {str(e)}")
+
+# Existing inference_function
 def inference_function(channel):
     global error_blocking
-    
+
     if error_blocking:
         return
-    
+
     elif GPIO.input(channel) == GPIO.LOW:
         print("INF: stopped inferencing")
         GPIO.output(inf_led, GPIO.LOW)
-    
+
     elif GPIO.input(channel) == GPIO.HIGH:
-        print("INF: began inferencing")
+        print("INF: began inferencing.")
         GPIO.output(inf_led, GPIO.HIGH)
-        # Run model inference
-        while GPIO.input(infer_sw) == GPIO.HIGH and not error_blocking and running:
-            print("INF: running inference stuff!")
-            time.sleep(0.1)
+
+        # Create a new directory for data collection when inference starts
+        inf_folder = storage.create_inference_folder(run_folder=run_folder)
+        print(f"INF: Created model inferencing folder at {inf_folder}")
+
+        # Iterate through directories in run_folder
+        for folder in os.listdir(run_folder):
+            if folder.startswith('dc'):
+                dc_folder_path = os.path.join(run_folder, folder)
+                print(f"INF: Processing folder: {dc_folder_path}")
+
+                # Iterate through images in the dc folder
+                for image_file in os.listdir(dc_folder_path):
+                    if image_file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                        image_path = os.path.join(dc_folder_path, image_file)
+                        print(f"INF: Running inference on image: {image_path}")
+
+                        # Load the image for inference
+                        image = cv2.imread(image_path)
+                        if image is None:
+                            print(f"INF ERROR: Unable to read image: {image_path}")
+                            continue
+                        
+                        # Perform inference
+                        print(f"Beginning model inference.")
+                        results = model.predict(image)  # Replace with your model's inference method
+                        print(f"Completed inference!")
+                        results.save_txt()
+                        # Save the results using the save_result_to_json function
+
+        GPIO.output(inf_led, GPIO.LOW)  # Turn off the LED after processing
+
 
 def main():
+    
     print("STARTING NEW ABV SYSTEM RUN ==========================")
     setup_process()
     GPIO.output(on_led, GPIO.HIGH)  # System has been turned on!
@@ -261,16 +278,12 @@ def main():
     print("MAIN: Reached main loop. Press Ctrl+C to exit.")
     
     while True:
-        time.sleep(0.01)  # Keep the main loop running
-        if (GPIO.input(data_sw) == GPIO.HIGH and GPIO.input(inf_led) == GPIO.HIGH):
-            handle_error_section()
+        time.sleep(0.5)  # Keep the main thread alive
 
 if __name__ == "__main__":
-
-   
-    main()  
-
-
-	# logging.error("An error occurred: %s", str(e))
-
-    # logging.info("Script completed successfully.")
+    try:
+        main()
+    except Exception as e:
+        print(f"MAIN ERROR: {str(e)}")
+        shutdown_process()
+        sys.exit(1)
