@@ -37,6 +37,7 @@ sys.stderr = PrintLogger()  # Redirect stderr to logging as well
 """
 
 from storage_utils import choose_drive, create_new_folder, create_img_name
+from yolo_utils import load_yolo
 
 """
     Controller script that runs on startup.
@@ -61,6 +62,9 @@ save_location = None
 error_blocking = False
 blinking = False
 running = False
+
+models_dir_path = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models"
+model = None
 
 fps = 30
 
@@ -110,7 +114,7 @@ def block_till_both_off():
     GPIO.output(inf_led, GPIO.LOW)
 
 def setup_process():
-    global cam, save_location, running
+    global cam, save_location, running, model
     print("doing things")
     GPIO.setmode(GPIO.BOARD)
     
@@ -142,6 +146,14 @@ def setup_process():
         
     save_location = create_new_folder(usb_location)
     print(f"SETUP: Set to save images to {save_location}")
+    
+    print("SETUP: Setting up model!")
+    model = load_yolo(models_dir_path, model_type='n')
+    
+    if model is None:
+        print("SETUP ERROR: Yolo Model not setup!")
+        shutdown_process()
+        sys.exit(0)
     
     # Only proceed if both switches are turned off
     if GPIO.input(infer_sw) == GPIO.HIGH or GPIO.input(data_sw) == GPIO.HIGH:    
