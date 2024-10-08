@@ -3,9 +3,10 @@
 import Jetson.GPIO as GPIO
 import time
 import cv2
-from setup import save_location, fps, error_blocking, running, handle_error_section
+from setup import save_location, fps, error_blocking, running, dc_led
+from setup import data_sw, cam
+from storage_utils import create_img_name
 
-dc_led = 21
 
 def data_collection_function(channel):
     global error_blocking
@@ -26,7 +27,7 @@ def data_collection_function(channel):
         frame_delay = 1 / fps
 
         while GPIO.input(data_sw) == GPIO.HIGH and not error_blocking and running:
-            frame = None  # Replace with actual camera frame capture logic
+            frame = cam.read()  # Replace with actual camera frame capture logic
             if frame is not None:
                 filename = create_img_name()
                 img_location = f"{save_location}/f{filename}.jpg"
