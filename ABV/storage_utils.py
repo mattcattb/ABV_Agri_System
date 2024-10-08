@@ -68,7 +68,7 @@ def test_find_flashdrive():
     print(find_all_drives())
     location = choose_drive()
     files = os.listdir(location)   
-    print(files)
+    print(files) 
 
 if __name__ == "__main__":
     test_find_flashdrive()
