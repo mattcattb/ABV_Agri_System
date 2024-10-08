@@ -1,0 +1,14 @@
+[Unit]
+Description= Run ABV Service Script
+
+[Service]
+Type=simple
+User=preag
+Group=preag  
+WorkingDirectory=/home/preag/Desktop/ABV_Agri_System
+Environment="PATH=/home/preag/archiconda3/envs/env38/bin:/usr/bin:/bin"
+
+ExecStart=/home/preag/Desktop/ABV_Agri_System/start_main_script.sh
+
+[Install]
+WantedBy=multi-user.target
