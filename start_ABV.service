@@ -1,9 +1,0 @@
-[Unit]
-Description=ABV System Start Service, for running ABV system.
-[Service]
-ExecStart=/bin/bash -c 'source /home/preag/archiconda3/etc/profile.d/conda.sh && conda activate env369 && sudo python3 /home/preag/Desktop/ABV_Agri_System/ABV/main.py'
-WorkingDirectory=/home/preag/Desktop/ABV_Agri_System/ABV
-StandardOutput=journal
-StandardError=journal
-[Install]
-WantedBy=multi-user.target
