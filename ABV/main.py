@@ -17,7 +17,7 @@ from storage import choose_drive, create_img_name
 
 import storage
 
-from yolo_utils import load_yolo
+from yolo_utils import load_yolo, save_results_json
 
 infer_sw = 11 # inference switch
 data_sw = 15 # data collection switch
@@ -200,103 +200,71 @@ def data_collection_function(channel):
             time.sleep(frame_delay)    
         GPIO.output(dc_led, GPIO.LOW)
 
-# Function to save results to JSON
-def save_result_to_json(results, json_path):
-    """
-    Save the inference results to a JSON file.
-
-    Args:
-        results (dict): The inference results to save.
-        json_path (str): The path where the JSON file will be saved.
-    """
-    try:
-        
-        with open(json_path, 'w') as json_file:
-            json.dump(results, json_file)
-        print(f"INF: Saved results to {json_path}")
-    except Exception as e:
-        print(f"INF ERROR: Failed to save JSON result: {str(e)}")
-
-# Existing inference_function
 def inference_function(channel):
-    global error_blocking
-
+    global error_blocking, running
+    
     if error_blocking:
         return
-
+    
     elif GPIO.input(channel) == GPIO.LOW:
-        print("INF: stopped inferencing")
+        # Inference switch turned off
+        print("INF: stopping inference")
         GPIO.output(inf_led, GPIO.LOW)
-
+    
     elif GPIO.input(channel) == GPIO.HIGH:
-        print("INF: began inferencing.")
-        GPIO.output(inf_led, GPIO.HIGH)
-
-        # Create a new directory for data collection when inference starts
+        # Inference switch turned on
+        print("INF: starting inference")
+        
+        # Create a new directory for inference results
         inf_folder = storage.create_inference_folder(run_folder=run_folder)
         print(f"INF: Created model inferencing folder at {inf_folder}")
 
-        # Iterate through directories in run_folder
-        for folder in os.listdir(run_folder):
-            
-            if not running:
-                print("INF: Inference stopped while processing DC folders.")
-                break  # Stop processing if running is set to False
-            
-            if folder.startswith('dc'):
-                dc_folder_path = os.path.join(run_folder, folder)
-                print(f"INF: Processing DC folder {dc_folder_path}.")
-
-                # Iterate through images in the dc folder
-                for image_file in os.listdir(dc_folder_path):
-                    if not running:
-                        print("INF: Inference stopped while processing images.")
-                        break  # Stop processing if running is set to False
-                    
-
-                    if image_file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                        image_path = os.path.join(dc_folder_path, image_file)
-                        print(f"INF: Running inference on image: {image_path}")
-
-                        # Load the image for inference
-                        image = cv2.imread(image_path)
-                        if image is None:
-                            print(f"INF ERROR: Unable to read image: {image_path}")
-                            continue
-                        
-                        # Perform inference
-                        print(f"Beginning model inference.")
-                        results = model.predict(image)  # Replace with your model's inference method
-                        print(f"Completed inference!")
-                        
-                        save_results_json(results, inf_folder, image_file)
-                        # Save the results using the save_result_to_json function
-
-        GPIO.output(inf_led, GPIO.LOW)  # Turn off the LED after processing
-
-
-def save_results_json(results, inf_folder, img_name):
-    """
-        results: [Results] Ultralytics object
-        inf_folder: Location of folder to store inferences 
-        img_name: name of image being scanned
-    """
-    
-    if len(results) != 1:
-        print("ERROR: Too many results!")
-        return None
-    
-    result = results[0]
-    json_str_result = result.to_json(normalize=False)
-    json_result = json.loads(json_str_result)
+        # Turn on the inference LED
+        GPIO.output(inf_led, GPIO.HIGH)
         
-    base_name, _ = os.path.splitext(img_name)
-    json_name = base_name + ".json"
-    json_save_path = os.path.join(inf_folder, json_name)
-    
-    with open(json_save_path, 'w') as f:
-        json.dump(json_result, f, indent=2)
+        while GPIO.input(channel) == GPIO.HIGH and not error_blocking and running:
+            # Iterate through directories in run_folder while the switch is on
+            for folder in os.listdir(run_folder):
+                if not running or GPIO.input(channel) == GPIO.LOW:
+                    print("INF: Inference stopped while processing DC folders.")
+                    break  # Stop processing if running is set to False or switch is turned off
+                
+                if folder.startswith('dc'):
+                    dc_folder_path = os.path.join(run_folder, folder)
+                    print(f"INF: Processing DC folder {dc_folder_path}.")
+
+                    # Iterate through images in the dc folder
+                    for image_file in os.listdir(dc_folder_path):
+                        if not running or GPIO.input(channel) == GPIO.LOW:
+                            print("INF: Inference stopped while processing images.")
+                            break  # Stop processing if running is set to False or switch is turned off
+
+                        if image_file.lower().endswith(('.jpg', '.jpeg', '.png')):
+                            image_path = os.path.join(dc_folder_path, image_file)
+                            print(f"INF: Running inference on image: {image_path}")
+
+                            # Load the image for inference
+                            image = cv2.imread(image_path)
+                            if image is None:
+                                print(f"INF ERROR: Unable to read image: {image_path}")
+                                continue
+                            
+                            # Perform inference
+                            print(f"Beginning model inference.")
+                            results = model.predict(image)  # Replace with your model's inference method
+                            print(f"Completed inference!")
+                            
+                            # Save the inference results
+                            save_results_json(results, inf_folder, image_file)
+            
+            # Check if the switch is turned off or if running is set to False
+            if not running or GPIO.input(channel) == GPIO.LOW:
+                print("INF: Stopping inference.")
+                break
         
+        # Turn off the inference LED when inference stops
+        GPIO.output(inf_led, GPIO.LOW)
+
         
 def main():
     
