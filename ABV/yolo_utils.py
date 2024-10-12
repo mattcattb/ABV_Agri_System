@@ -54,8 +54,9 @@ def save_results_json(results, inf_folder, img_name):
     result = results[0]
     json_str_result = result.to_json(normalize=False)
     json_result = json.loads(json_str_result)
-        
+    print(f"img_name: {img_name}")
     base_name, _ = os.path.splitext(img_name)
+    print(f"Base name: {base_name}")
     json_name = base_name + ".json"
     json_save_path = os.path.join(inf_folder, json_name)
     
