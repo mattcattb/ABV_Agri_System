@@ -1,4 +1,5 @@
 from ultralytics import YOLO
+import json
 
 DEFAULT_MODEL_PATH = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models/yolo11s.pt"
 
@@ -22,6 +23,13 @@ def test_single_inference():
     # Display results
     print("Inference Results:")
     print(results)
+    for result in results: 
+        print(result)
+        result.save("result1.jpg")
+        json_str_result = result.to_json(normalize=False)
+        json_result = json.loads(json_str_result)
+        with open('result1.json', 'w') as f:
+            json.dump(json_result, f, indent=2)
 
 if __name__ == "__main__":
     test_single_inference()
