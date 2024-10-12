@@ -18,8 +18,10 @@ L_Switch: Begin Data Collection <br>
 R_Switch: Begin Inferencing <br>
 <p>
 
+Start with both switches at off.
+
 **Do not turn on both at once!** <br>
-This will lead to infernece mode, which will force you to turn off both switches before continuing. 
+This will lead to blocking mode, which will force you to turn off both switches before continuing
 
 ## Requirements
 
@@ -34,5 +36,8 @@ This will lead to infernece mode, which will force you to turn off both switches
 - Archiconda
 - Python 3.6.9
 - Services
+- python3-jetson-gpio
+- exFAT (sudo apt-get install exfat-fuse exfat-utils)
 
 
+### Use Guide 
