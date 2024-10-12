@@ -1,5 +1,6 @@
 from ultralytics import YOLO
 import os 
+import json
 
 valid_yolo_types = ['n', 's'] # nano and small are only supported types
 
@@ -37,3 +38,27 @@ def load_yolo(models_path, model_type='n'):
     model = YOLO(path_to_model)
 
     return model
+
+
+def save_results_json(results, inf_folder, img_name):
+    """
+        results: [Results] Ultralytics object
+        inf_folder: Location of folder to store inferences 
+        img_name: name of image being scanned
+    """
+    
+    if len(results) != 1:
+        print("ERROR: Too many results!")
+        return None
+    
+    result = results[0]
+    json_str_result = result.to_json(normalize=False)
+    json_result = json.loads(json_str_result)
+        
+    base_name, _ = os.path.splitext(img_name)
+    json_name = base_name + ".json"
+    json_save_path = os.path.join(inf_folder, json_name)
+    
+    with open(json_save_path, 'w') as f:
+        json.dump(json_result, f, indent=2)
+        
