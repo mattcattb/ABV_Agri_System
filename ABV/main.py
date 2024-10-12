@@ -191,7 +191,7 @@ def data_collection_function(channel):
             frame = cam.read()
             if frame is not None:
                 filename = create_img_name()
-                img_location = f"{dc_folder}/f{filename}.jpg"
+                img_location = f"{dc_folder}/f{filename}"
                 try: 
                     cv2.imwrite(img_location, frame)
                     print(f"DC: saved to {img_location}")
@@ -252,6 +252,7 @@ def inference_function(channel):
                             # Perform inference
                             print(f"Beginning model inference.")
                             results = model.predict(image)  # Replace with your model's inference method
+                            print(f"results: {results}")
                             print(f"Completed inference!")
                             
                             # Save the inference results
