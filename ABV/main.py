@@ -210,6 +210,7 @@ def save_result_to_json(results, json_path):
         json_path (str): The path where the JSON file will be saved.
     """
     try:
+        
         with open(json_path, 'w') as json_file:
             json.dump(results, json_file)
         print(f"INF: Saved results to {json_path}")
@@ -237,12 +238,22 @@ def inference_function(channel):
 
         # Iterate through directories in run_folder
         for folder in os.listdir(run_folder):
+            
+            if not running:
+                print("INF: Inference stopped while processing DC folders.")
+                break  # Stop processing if running is set to False
+            
             if folder.startswith('dc'):
                 dc_folder_path = os.path.join(run_folder, folder)
-                print(f"INF: Processing folder: {dc_folder_path}")
+                print(f"INF: Processing DC folder {dc_folder_path}.")
 
                 # Iterate through images in the dc folder
                 for image_file in os.listdir(dc_folder_path):
+                    if not running:
+                        print("INF: Inference stopped while processing images.")
+                        break  # Stop processing if running is set to False
+                    
+
                     if image_file.lower().endswith(('.jpg', '.jpeg', '.png')):
                         image_path = os.path.join(dc_folder_path, image_file)
                         print(f"INF: Running inference on image: {image_path}")
@@ -257,12 +268,36 @@ def inference_function(channel):
                         print(f"Beginning model inference.")
                         results = model.predict(image)  # Replace with your model's inference method
                         print(f"Completed inference!")
-                        results.save_txt()
+                        
+                        save_results_json(results, inf_folder, image_file)
                         # Save the results using the save_result_to_json function
 
         GPIO.output(inf_led, GPIO.LOW)  # Turn off the LED after processing
 
 
+def save_results_json(results, inf_folder, img_name):
+    """
+        results: [Results] Ultralytics object
+        inf_folder: Location of folder to store inferences 
+        img_name: name of image being scanned
+    """
+    
+    if len(results) != 1:
+        print("ERROR: Too many results!")
+        return None
+    
+    result = results[0]
+    json_str_result = result.to_json(normalize=False)
+    json_result = json.loads(json_str_result)
+        
+    base_name, _ = os.path.splitext(img_name)
+    json_name = base_name + ".json"
+    json_save_path = os.path.join(inf_folder, json_name)
+    
+    with open(json_save_path, 'w') as f:
+        json.dump(json_result, f, indent=2)
+        
+        
 def main():
     
     print("STARTING NEW ABV SYSTEM RUN ==========================")
