@@ -23,6 +23,18 @@ def test_single_inference():
     # Display results
     print("Inference Results:")
     print(results)
+    
+    print_results(results)
+    
+
+def test_onnx_inference():
+    model = YOLO("/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models/yolo11n.onnx")
+    results = model("/home/preag/Desktop/ABV_Agri_System/bus.jpg")
+    
+    print_results(results)
+
+def print_results(results):
+
     for result in results: 
         print(result)
         result.save("result1.jpg")
@@ -32,4 +44,4 @@ def test_single_inference():
             json.dump(json_result, f, indent=2)
 
 if __name__ == "__main__":
-    test_single_inference()
+    test_onnx_inference()
