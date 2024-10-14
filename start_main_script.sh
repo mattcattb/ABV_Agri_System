@@ -22,6 +22,18 @@ log "Conda environment activated: $CONDA_DEFAULT_ENV"
 log "Working Directory: $(pwd)"
 log "Running the main service script!"
 
+# Log connected cameras
+log "Connected Cameras:"
+{
+    v4l2-ctl --list-devices
+} >> "$LOGFILE" 2>&1 || log "Failed to list cameras."
+
+# Log connected USB mounts
+log "Connected Mounts:"
+{
+    lsblk -o MOUNTPOINT,SIZE,TYPE 
+} >> "$LOGFILE" 2>&1 || log "Failed to list mounts."
+
 # Run the Python script and redirect output
 {
     OPENBLAS_CORETYPE=ARMV8 /home/preag/archiconda3/envs/env38/bin/python /home/preag/Desktop/ABV_Agri_System/ABV/main.py
