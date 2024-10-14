@@ -136,7 +136,7 @@ def setup_process():
     run_folder = storage.create_run_folder(usb_location)
     print(f"SETUP: Run folder is {run_folder}")
     print("SETUP: Setting up model!")
-    model = load_yolo(models_dir_path, model_type='n')
+    model = load_yolo(models_dir_path, model_type='o')
     print("SETUP: Model finished setup!")
     
     if model is None:

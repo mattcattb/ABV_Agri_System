@@ -2,36 +2,38 @@ from ultralytics import YOLO
 import os 
 import json
 
-valid_yolo_types = ['n', 's'] # nano and small are only supported types
+MODELS_DIR_PATH = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models"
 
-def find_model(models_path, model_type):
+yolon_onnx = "yolo11n.onnx"
+yolon = "yolo11n.pt"
+yolos = "yolo11s.pt"
+
+def find_model(models_path=MODELS_DIR_PATH, model_type="o"):
     # Construct the expected model filename based on the model type
-    if model_type == 'n':
-        model_filename = 'yolo11n.pt'  # Name for YOLO 11 Nano
-    elif model_type == 's':
-        model_filename = 'yolo11s.pt'  # Name for YOLO 11 Small
+    if model_type == "o":
+        model_name = yolon_onnx
+    elif model_type == "pt":
+        model_name = yolon
     else:
         return None
     
     # Construct full path to the model file
-    model_path = os.path.join(models_path, model_filename)
+    model_path = os.path.join(models_path, model_name)
     
     # Check if the model file exists
     if not os.path.isfile(model_path):
-        print(f"ERROR: Model file {model_filename} not found in {models_path}.")
+        print(f"ERROR: Model file {model_name} not found in {models_path}.")
         return None
     
     return model_path
 
-def load_yolo(models_path, model_type='n'):
-    if model_type not in valid_yolo_types:
-        print("ERROR: Invalid YOLO Model Chosen!")
-        return None
+def load_yolo(models_path=MODELS_DIR_PATH, model_type='o'):
     
     # Find the correct model in the specified models path
     path_to_model = find_model(models_path, model_type)
     
     if path_to_model is None:
+        print(f"YOLO ERROR: no path to model of type{model_type}")
         return None  # Exit if the model path is not found
     
     # Load the model
