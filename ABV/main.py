@@ -33,7 +33,16 @@ fps = 30
 models_dir_path = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models"
 model = None
 
-# todo do something if all images were scanned
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,  # Set to DEBUG to capture all messages
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Include timestamp and log level
+    handlers=[
+        logging.FileHandler("debug.log"),  # Log to a file
+        logging.StreamHandler()  # Also log to console
+    ]
+)
 
 def blink_leds():
     global blinking
@@ -106,10 +115,10 @@ def setup_process():
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
     GPIO.output(on_led, GPIO.LOW)
-
+    blink_led(on_led, 3)
 
     cam = Camera(camera_type=0, width=640, height=480, fps=30, enforce_fps=True, debug=True)
-
+    
     if not cam.isReady():
         print("SETUP ERROR: Camera could not be prepared...")
         shutdown_process()
@@ -122,6 +131,7 @@ def setup_process():
         print("SETUP: Looking again for usb mount...")        
         time.sleep(3)
         usb_location = choose_drive()
+        print(f"USB locations: {usb_location}")
 
     run_folder = storage.create_run_folder(usb_location)
     print(f"SETUP: Run folder is {run_folder}")
