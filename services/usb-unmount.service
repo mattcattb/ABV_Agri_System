@@ -1,0 +1,10 @@
+[Unit]
+Description=Unmount USB Drive on Shutdown
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/preag/Desktop/ABV_Agri_System/usb_mount.sh unmount
+
+[Install]
+WantedBy=halt.target reboot.target poweroff.target

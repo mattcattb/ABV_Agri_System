@@ -1,5 +1,7 @@
 [Unit]
 Description= Run ABV Service Script
+After=systemd-udev-settle.service
+Requires=systemd-udev-settle.service
 
 [Service]
 Type=simple
