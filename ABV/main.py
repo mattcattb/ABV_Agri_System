@@ -154,9 +154,11 @@ def shutdown_process():
     running = False
     
     if inference_thread is not None:
+        print("here1")
         inference_thread.join()
         
     if data_collection_thread is not None:
+        print("here2")
         data_collection_thread.join()
     
     GPIO.output(dc_led, GPIO.LOW)
@@ -192,24 +194,16 @@ def data_collection_thread_function():
     if error_blocking:
         return
     
-    
     dc_folder = storage.create_data_collection_folder(run_folder)
-    
     
     frame_delay = 1 / fps
     print(f"DC: Storing camera data to {dc_folder}")
     
-    try:
-        print(f"okay lets see this...")
-        time.sleep(4000)
-        frame = cam.read()
-        print(f"{frame}")
-
-    except Exception as e:
-        print(f"Error capturing from camera: {str(e)}")
-    
-    
-    while should_run(data_sw):
+    while True:
+        
+        if not should_run(data_sw):
+            break
+        
         frame = cam.read()
 
         if frame is not None:
@@ -221,8 +215,8 @@ def data_collection_thread_function():
             except Exception as e:
                 print("DC ERROR: Failed to save image")
 
-        time.sleep(4000)
         time.sleep(frame_delay)
+        
     GPIO.output(dc_led, GPIO.LOW)
 
 def inference_thread_function():
