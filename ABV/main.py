@@ -154,11 +154,9 @@ def shutdown_process():
     running = False
     
     if inference_thread is not None:
-        print("here1")
         inference_thread.join()
         
     if data_collection_thread is not None:
-        print("here2")
         data_collection_thread.join()
     
     GPIO.output(dc_led, GPIO.LOW)
