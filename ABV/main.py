@@ -110,7 +110,7 @@ def setup_process():
     GPIO.output(on_led, GPIO.LOW)
     blink_led(on_led, 3)
 
-    cam = Camera(camera_type=0, width=640, height=480, fps=30, enforce_fps=True, debug=True)
+    cam = Camera(camera_type=0, width=1920, height=1080, fps=30, enforce_fps=True, debug=True)
     
     if not cam.isReady():
         print("SETUP ERROR: Camera could not be prepared...")
