@@ -1,34 +1,43 @@
 import cv2
-
-# Use the working GStreamer pipeline that was tested in the terminal
-gst_pipeline = (
-    "nvarguscamerasrc ! "
-    "video/x-raw(memory:NVMM), width=(int)1280, height=(int)720, framerate=(fraction)30/1, format=(string)NV12 ! "
-    "nvvidconv ! "
-    "video/x-raw, format=(string)BGRx ! "
-    "videoconvert ! "
-    "video/x-raw, format=(string)BGR ! appsink"
-)
-
-# Open the video capture using the GStreamer pipeline
-cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
-
-if not cap.isOpened():
-    print("Error: Could not open video stream.")
-    exit()
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Error: Could not read frame.")
-        break
-
-    cv2.imshow('CSI Camera Feed', frame)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+import time
+from nanocamera import Camera
 
 
+# Assuming you have some way to initialize your camera
+# e.g., cam = Camera(camera_type=0, width=640, height=480)
+
+# Instead of using cv2.imshow(), use cv2.imwrite() to save frames
+def main():
+    cam = None  # Replace with actual camera initialization
+
+    try:
+        # Initialize the camera
+        cam = Camera(camera_type=0, width=640, height=480)
+
+        if cam.isReady():
+            print("Camera is ready!")
+            
+            # Continuously capture frames
+            while True:
+                frame = cam.read()  # Assuming cam.capture() returns a frame
+                timestamp = time.strftime("%Y%m%d-%H%M%S")
+                filename = f"frame_{timestamp}.jpg"
+                
+                # Save the captured frame to a file
+                cv2.imwrite(filename, frame)
+                print(f"Saved: {filename}")
+                
+                time.sleep(1)  # Adjust sleep duration as necessary
+
+        else:
+            print("Camera not ready.")
+
+    except Exception as e:
+        print(f"An error occurred while initializing or using the camera: {e}")
+
+    finally:
+        if cam is not None:
+            cam.release()  # Ensure proper shutdown of the camera
+
+if __name__ == "__main__":
+    main()

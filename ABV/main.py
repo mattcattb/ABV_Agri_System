@@ -33,17 +33,6 @@ fps = 30
 models_dir_path = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models"
 model = None
 
-import logging
-
-logging.basicConfig(
-    level=logging.DEBUG,  # Set to DEBUG to capture all messages
-    format='%(asctime)s - %(levelname)s - %(message)s',  # Include timestamp and log level
-    handlers=[
-        logging.FileHandler("debug.log"),  # Log to a file
-        logging.StreamHandler()  # Also log to console
-    ]
-)
-
 def blink_leds():
     global blinking
     while blinking:
@@ -70,8 +59,12 @@ def block_till_both_off():
     error_blocking = True
     blinking = True
 
-    data_collection_thread.join()
-    inference_thread.join()
+    if data_collection_thread is not None:
+        data_collection_thread.join()
+    
+    if inference_thread is not None:
+        inference_thread.join()
+    
     blink_thread = threading.Thread(target=blink_leds)
     blink_thread.start()
     
@@ -117,7 +110,7 @@ def setup_process():
     GPIO.output(on_led, GPIO.LOW)
     blink_led(on_led, 3)
 
-    cam = Camera(camera_type=0, width=640, height=480, fps=30, enforce_fps=True, debug=True)
+    cam = Camera(camera_type=0, width=1920, height=1080, fps=30, enforce_fps=True, debug=True)
     
     if not cam.isReady():
         print("SETUP ERROR: Camera could not be prepared...")
@@ -159,10 +152,19 @@ def shutdown_process():
         cam.release()
         print("SHUTDOWN: cam released")
     running = False
+    
+    if inference_thread is not None:
+        inference_thread.join()
+        
+    if data_collection_thread is not None:
+        data_collection_thread.join()
+    
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
     GPIO.output(on_led, GPIO.LOW)
     GPIO.cleanup()
+    
+    print(f"shutdown complete!")
 
 
 def signal_handler(sig, frame):
@@ -181,6 +183,7 @@ def handle_error_section():
     print("ERROR: Resolved by turning off both switches.")
 
 def should_run(channel):
+    # true if should run
     return running and not error_blocking and GPIO.input(channel) == GPIO.HIGH
 
 def data_collection_thread_function():
@@ -188,11 +191,19 @@ def data_collection_thread_function():
     print("DC: starting data collection")
     if error_blocking:
         return
+    
     dc_folder = storage.create_data_collection_folder(run_folder)
+    
     frame_delay = 1 / fps
     print(f"DC: Storing camera data to {dc_folder}")
-    while should_run(data_sw):
+    
+    while True:
+        
+        if not should_run(data_sw):
+            break
+        
         frame = cam.read()
+
         if frame is not None:
             filename = create_img_name()
             img_location = f"{dc_folder}/f{filename}"
@@ -203,6 +214,7 @@ def data_collection_thread_function():
                 print("DC ERROR: Failed to save image")
 
         time.sleep(frame_delay)
+        
     GPIO.output(dc_led, GPIO.LOW)
 
 def inference_thread_function():
