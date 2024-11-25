@@ -1,12 +1,13 @@
 # ABV Camera Monitoring System
 
-This project provides stable control over a camera monitoring system for research use.
+This project provides stable control over a camera monitoring system for agriculture field capture use. This project was developed in colaboration with the UF College of Agriculture and Life Sciences. 
 
 ## Project Overview
 
-This system includes two main components:
+This system includes one core functionality:
 - **Data Collection Switch**: Activates and saves images at 30 FPS to external storage when toggled.
-- **Model Prediction Switch**: (In Progress) Runs the YOLOv8 image prediction model every 5 seconds, saving results to external storage.
+
+The system is made to be as dynamic as possible, being able to withstand any system thrown at it.
 
 ## Control Flow
 
