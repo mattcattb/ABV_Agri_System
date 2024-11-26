@@ -2,6 +2,8 @@
 
 This project provides stable control over a camera monitoring system for agriculture field capture use. This project was developed in colaboration with the UF College of Agriculture and Life Sciences. 
 
+![ABV attached to pesticide sprayer](IMG_9503.jpg)
+
 ## Project Overview
 
 This system includes one core functionality:
