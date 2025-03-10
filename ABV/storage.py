@@ -1,6 +1,7 @@
 import subprocess
 import os
 from datetime import datetime
+import json
 
 """
     Functions for Linux directory storage functionality.
@@ -51,26 +52,48 @@ def choose_drive(min_space_required=DEFAULT_MIN_SPACE):
     
     return None  # Return None if no drive meets the space requirement
 
+def get_run_number(usb_location):
+    run_dir = os.path.join(usb_location, "run")
+    os.makedirs(run_dir, exist_ok=True)
+    confirm_file = os.path.join(run_dir, "confirm.txt")
+
+    if os.path.exists(confirm_file):
+        try:
+            with open(confirm_file, 'r') as f:
+                data = json.load(f)
+                run_number = data.get('number', 0) + 1
+        except (json.JSONDecodeError, FileNotFoundError):
+            run_number = 1
+    else:
+        run_number = 1
+
+    with open(confirm_file, 'w') as f:
+        json.dump({'number': run_number}, f)
+  
+    return run_number
+
 def create_run_folder(usb_location):
     """Create a run folder with the current timestamp on the USB device."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_folder = os.path.join(usb_location, f"runs/run_{timestamp}")  # Store runs on USB
+    run_number = get_run_number(usb_location)
+    run_folder = os.path.join(usb_location, f"runs/run_{run_number}")  # Store runs on USB
     os.makedirs(run_folder, exist_ok=True)
     print(f"RUN FOLDER: Created run folder at {run_folder}")
     return run_folder
 
 def create_data_collection_folder(run_folder):
     """Create a data collection folder within the run folder."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    dc_folder = os.path.join(run_folder, f"dc_{timestamp}")
+    dc_folders = [d for d in os.listdir(run_folder) if d.startswith('dc_')]
+    dc_number = len(dc_folders) + 1
+    dc_folder = os.path.join(run_folder, f"dc_{dc_number}")
     os.makedirs(dc_folder, exist_ok=True)
     print(f"DATA COLLECTION FOLDER: Created at {dc_folder}")
     return dc_folder
 
 def create_inference_folder(run_folder):
     """Create an inference results folder within the run folder."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    infer_folder = os.path.join(run_folder, f"infer_{timestamp}")
+    inf_folders = [d for d in os.listdir(run_folder) if d.startswith('infer_')]
+    inf_number = len(inf_folders) + 1
+    infer_folder = os.path.join(run_folder, f"infer_{inf_number}")
     os.makedirs(infer_folder, exist_ok=True)
     print(f"INFERENCE FOLDER: Created at {infer_folder}")
     return infer_folder
