@@ -29,6 +29,9 @@ running = False
 data_collection_thread = None
 inference_thread = None
 
+on_blinking_thread = None
+blink_green = False
+
 fps = 30
 models_dir_path = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models"
 model = None
@@ -93,10 +96,18 @@ def blink_led(led_ch, seconds, blink_rate=0.3):
         GPIO.output(led_ch, GPIO.LOW)   # Turn LED off
         time.sleep(blink_rate)            # Keep LED off for the blink rate
 
+def cont_blink_gled():
+    blink_rate=0.2
+    while blink_green == True :
+        GPIO.output(on_led, GPIO.HIGH)
+        time.sleep(blink_rate)
+        GPIO.output(on_led, GPIO.LOW)
+        time.sleep(blink_rate)
+
 def setup_process():
     
     # todo make lED blink while things are happening
-    global cam, run_folder, running, model
+    global cam, run_folder, running, model, blink_green, on_blinking_thread
     print("SETUP: Beginning setup!")
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(data_sw, GPIO.IN)
@@ -104,11 +115,15 @@ def setup_process():
     GPIO.setup(dc_led, GPIO.OUT)
     GPIO.setup(inf_led, GPIO.OUT)
     GPIO.setup(on_led, GPIO.OUT)
+    
+    # start blinking green to show in setup 
+    blink_green = True
+    on_blinking_thread = threading.Thread(target=cont_blink_gled)
+    on_blinking_thread.start()
 
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
     GPIO.output(on_led, GPIO.LOW)
-    blink_led(on_led, 3)
 
     cam = Camera(camera_type=0, width=1920, height=1080, fps=30, enforce_fps=True, debug=True)
     
@@ -139,6 +154,10 @@ def setup_process():
 
     if GPIO.input(infer_sw) == GPIO.HIGH or GPIO.input(data_sw) == GPIO.HIGH:
         block_till_both_off()
+    
+    blink_green = False
+    on_blinking_thread.join()
+
         
     print("SETUP: Setup finished!")
             
@@ -146,18 +165,22 @@ def setup_process():
 
 
 def shutdown_process():
-    global cam, running
+    global cam, running, on_blinking_thread, inference_thread, data_collection_thread, blink_green
     print("SHUTDOWN: Entering Shutdown Process")
     if cam is not None:
         cam.release()
         print("SHUTDOWN: cam released")
-    running = False
+    running = False # tell threads to stop !
     
-    if inference_thread is not None:
+    if inference_thread is not None and inference_thread.is_alive():
         inference_thread.join()
         
-    if data_collection_thread is not None:
+    if data_collection_thread is not None and data_collection_thread.is_alive():
         data_collection_thread.join()
+    
+    if on_blinking_thread is not None and on_blinking_thread.is_alive():
+        blink_green = False
+        on_blinking_thread.join()
     
     GPIO.output(dc_led, GPIO.LOW)
     GPIO.output(inf_led, GPIO.LOW)
@@ -197,6 +220,8 @@ def data_collection_thread_function():
     frame_delay = 1 / fps
     print(f"DC: Storing camera data to {dc_folder}")
     
+    GPIO.output(dc_led, GPIO.HIGH) # output blue to show its running!!!
+    
     while True:
         
         if not should_run(data_sw):
@@ -224,7 +249,7 @@ def inference_thread_function():
         return
 
     inf_folder = storage.create_inference_folder(run_folder)
-
+    GPIO.output(inf_led, GPIO.HIGH)
     for folder in os.listdir(run_folder):
         if not should_run(infer_sw):
             break
@@ -258,13 +283,12 @@ def data_collection_toggled(channel):
         print("DC: starting data collection thread.")
         data_collection_thread = threading.Thread(target=data_collection_thread_function)
         data_collection_thread.start()
-        GPIO.output(dc_led, GPIO.HIGH)
+
     elif GPIO.input(data_sw) == GPIO.LOW:
         print("DC: Stopping data collection thread.")
         if data_collection_thread and data_collection_thread.is_alive():
             data_collection_thread.join()
             print("DC: Data collection thread stopped.")
-        GPIO.output(dc_led, GPIO.LOW)
 
 
 def inference_toggled(channel):
