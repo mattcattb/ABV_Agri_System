@@ -72,3 +72,12 @@ The system is made to be as dynamic as possible, being able to withstand any sys
 
 3. **Run Software**:
    - Your setup is now complete! Reboot your Jetson or unplug and replug the USB to see the light start blinking.
+
+
+### Future Goals
+
+- Add GPS Support
+- USB Device Connection
+- Add stronger logging
+- Add service dependencies
+- Finish Test Workflow
