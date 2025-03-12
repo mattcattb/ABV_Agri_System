@@ -5,7 +5,17 @@ ENABLE_LOGGING=true
 
 # Set up log files
 TIMESTAMP=$(date +"%Y%m%d_%H-%M-%S")
+LOGS_DIR="/home/preag/Desktop/ABV_Agri_System/logs"
 LOGFILE="/home/preag/Desktop/ABV_Agri_System/logs/$TIMESTAMP-script.log"
+
+if [ ! -d "$LOGS_DIR" ]; then
+    echo "Creating logs directory at $LOGS_DIR"
+    mkdir -p "$LOGS_DIR"
+    if [ ! -d "$LOGS_DIR" ]; then
+        echo "ERROR: Failed to create logs directory. Disabling logging."
+        ENABLE_LOGGING=false
+    fi
+fi
 
 # Log function
 log() {
