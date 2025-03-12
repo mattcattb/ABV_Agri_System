@@ -53,7 +53,7 @@ def choose_drive(min_space_required=DEFAULT_MIN_SPACE):
     return None  # Return None if no drive meets the space requirement
 
 def get_run_number(usb_location):
-    run_dir = os.path.join(usb_location, "run")
+    run_dir = os.path.join(usb_location, "runs")
     os.makedirs(run_dir, exist_ok=True)
     confirm_file = os.path.join(run_dir, "confirm.txt")
 
