@@ -1,4 +1,3 @@
-import logging
 import Jetson.GPIO as GPIO
 import time
 import signal
@@ -6,20 +5,14 @@ import sys
 import cv2
 from nanocamera import Camera
 import threading
-import json
-import os
-from datetime import datetime
 
 from storage import choose_drive, create_img_name
 import storage
-from yolo_utils import load_yolo, save_results_json
 
-infer_sw = 11  # Inference switch
 data_sw = 15  # Data collection switch
 
 on_led = 13  # Script is on pin (green)
 dc_led = 21  # Camera is collecting data (blue)
-inf_led = 29  # Camera is inferencing (red)
 
 cam = None
 run_folder = None
@@ -27,14 +20,11 @@ error_blocking = False
 blinking = False
 running = False
 data_collection_thread = None
-inference_thread = None
 
 on_blinking_thread = None
 blink_green = False
 
 fps = 30
-models_dir_path = "/home/preag/Desktop/ABV_Agri_System/ABV/yolo_models"
-model = None
 
 def blink_leds():
     global blinking
@@ -46,17 +36,10 @@ def blink_leds():
         else:
             GPIO.output(dc_led, GPIO.LOW)
 
-        if GPIO.input(infer_sw) == GPIO.HIGH:
-            GPIO.output(inf_led, GPIO.HIGH)
-            time.sleep(0.1)
-            GPIO.output(inf_led, GPIO.LOW)
-        else:
-            GPIO.output(inf_led, GPIO.LOW)
-
         time.sleep(0.2)
 
 
-def block_till_both_off():
+def block_till_off():
     global blinking, error_blocking
     print("ENTERED ERROR BLOCKING! Please turn both switches off.")
     error_blocking = True
@@ -65,20 +48,16 @@ def block_till_both_off():
     if data_collection_thread is not None:
         data_collection_thread.join()
     
-    if inference_thread is not None:
-        inference_thread.join()
-    
     blink_thread = threading.Thread(target=blink_leds)
     blink_thread.start()
     
-    while True:
-        if GPIO.input(data_sw) == GPIO.LOW and GPIO.input(infer_sw) == GPIO.LOW:
-            break
+    while GPIO.input(data_sw) == GPIO.HIGH:
+        time.sleep(0.05)
+    
     blinking = False
     error_blocking = False
     blink_thread.join()
     GPIO.output(dc_led, GPIO.LOW)
-    GPIO.output(inf_led, GPIO.LOW)
     
 def blink_led(led_ch, seconds, blink_rate=0.3):
     """
@@ -107,13 +86,11 @@ def cont_blink_gled():
 def setup_process():
     
     # todo make lED blink while things are happening
-    global cam, run_folder, running, model, blink_green, on_blinking_thread
+    global cam, run_folder, running, blink_green, on_blinking_thread
     print("SETUP: Beginning setup!")
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(data_sw, GPIO.IN)
-    GPIO.setup(infer_sw, GPIO.IN)
     GPIO.setup(dc_led, GPIO.OUT)
-    GPIO.setup(inf_led, GPIO.OUT)
     GPIO.setup(on_led, GPIO.OUT)
     
     # start blinking green to show in setup 
@@ -122,7 +99,6 @@ def setup_process():
     on_blinking_thread.start()
 
     GPIO.output(dc_led, GPIO.LOW)
-    GPIO.output(inf_led, GPIO.LOW)
     GPIO.output(on_led, GPIO.LOW)
 
     cam = Camera(camera_type=0, width=1920, height=1080, fps=30, enforce_fps=True, debug=True)
@@ -143,21 +119,12 @@ def setup_process():
 
     run_folder = storage.create_run_folder(usb_location)
     print(f"SETUP: Run folder is {run_folder}")
-    print("SETUP: Setting up model!")
-    model = load_yolo(models_dir_path, model_type='o')
-    print("SETUP: Model finished setup!")
-    
-    if model is None:
-        print("SETUP ERROR: Yolo Model not setup!")
-        shutdown_process()
-        sys.exit(0)
 
-    if GPIO.input(infer_sw) == GPIO.HIGH or GPIO.input(data_sw) == GPIO.HIGH:
-        block_till_both_off()
+    if GPIO.input(data_sw) == GPIO.HIGH:
+        block_till_off()
     
     blink_green = False
     on_blinking_thread.join()
-
         
     print("SETUP: Setup finished!")
             
@@ -165,15 +132,12 @@ def setup_process():
 
 
 def shutdown_process():
-    global cam, running, on_blinking_thread, inference_thread, data_collection_thread, blink_green
+    global cam, running, on_blinking_thread, data_collection_thread, blink_green
     print("SHUTDOWN: Entering Shutdown Process")
     if cam is not None:
         cam.release()
         print("SHUTDOWN: cam released")
     running = False # tell threads to stop !
-    
-    if inference_thread is not None and inference_thread.is_alive():
-        inference_thread.join()
         
     if data_collection_thread is not None and data_collection_thread.is_alive():
         data_collection_thread.join()
@@ -183,7 +147,6 @@ def shutdown_process():
         on_blinking_thread.join()
     
     GPIO.output(dc_led, GPIO.LOW)
-    GPIO.output(inf_led, GPIO.LOW)
     GPIO.output(on_led, GPIO.LOW)
     GPIO.cleanup()
     
@@ -194,16 +157,6 @@ def signal_handler(sig, frame):
     print("MAIN: Termination signal received. Cleaning up...")
     shutdown_process()
     sys.exit(0)
-
-
-def handle_error_section():
-    global error_blocking
-    print("ERROR: Both switches are on!")
-    error_blocking = True
-    print("ERROR: Please switch both switches off to continue.")
-    block_till_both_off()
-    error_blocking = False
-    print("ERROR: Resolved by turning off both switches.")
 
 def should_run(channel):
     # true if should run
@@ -242,41 +195,6 @@ def data_collection_thread_function():
         
     GPIO.output(dc_led, GPIO.LOW)
 
-def inference_thread_function():
-    global error_blocking
-    
-    if error_blocking: 
-        return
-
-    inf_folder = storage.create_inference_folder(run_folder)
-    GPIO.output(inf_led, GPIO.HIGH)
-    for folder in os.listdir(run_folder):
-        if not should_run(infer_sw):
-            break
-        if folder.startswith('dc'):
-            dc_folder_path = os.path.join(run_folder, folder)
-            print(f"INF: Processing DC folder {dc_folder_path}.")
-            for image_file in os.listdir(dc_folder_path):
-                if not should_run(infer_sw):
-                    print("INF: Inference stopped while processing images.")
-                    break
-                if image_file.lower().endswith(('.jpg', '.jpeg', '.png')):
-                    image_path = os.path.join(dc_folder_path, image_file)
-                    print(f"INF: Running inference on image: {image_path}")
-                    
-                    image = cv2.imread(image_path)
-                    if image is None:
-                        print(f"INF ERROR: Unable to read image: {image_path}")
-
-                    results = model.predict(image)
-                    print(f"Completed inference!")
-                    save_results_json(results, inf_folder, image_file)
-
-    blink_led(inf_led, 2) # blink for 2 seconds when ending
-                    
-    GPIO.output(inf_led, GPIO.LOW)
-
-
 def data_collection_toggled(channel):
     global data_collection_thread
     if GPIO.input(data_sw) == GPIO.HIGH and not error_blocking:
@@ -291,37 +209,15 @@ def data_collection_toggled(channel):
             print("DC: Data collection thread stopped.")
 
 
-def inference_toggled(channel):
-    global inference_thread
-    if GPIO.input(infer_sw) == GPIO.HIGH and not error_blocking:
-        print("INF: Starting inferencing thread.")
-        inference_thread = threading.Thread(target=inference_thread_function)
-        inference_thread.start()
-        GPIO.output(inf_led, GPIO.HIGH)
-    elif GPIO.input(infer_sw) == GPIO.LOW:
-        print("INF: Stopping inferencing thread.")
-        if inference_thread and inference_thread.is_alive():
-            inference_thread.join()
-            print("INF: Inference thread stopped.")
-        
-        GPIO.output(inf_led, GPIO.LOW)
-
-
 def main():
     setup_process()
     GPIO.output(on_led, GPIO.HIGH)
     GPIO.add_event_detect(data_sw, GPIO.BOTH, callback=data_collection_toggled)
-    GPIO.add_event_detect(infer_sw, GPIO.BOTH, callback=inference_toggled)
     print("Welcome to the main loop!")
     
     while True:
-        if (GPIO.input(data_sw) == GPIO.HIGH and GPIO.input(infer_sw) == GPIO.HIGH):
-            block_till_both_off()
         time.sleep(0.5)
         
-    
-
-
 if __name__ == "__main__":
     
     signal.signal(signal.SIGTERM, signal_handler)
