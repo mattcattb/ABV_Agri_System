@@ -52,10 +52,10 @@ def choose_drive(min_space_required=DEFAULT_MIN_SPACE):
     
     return None  # Return None if no drive meets the space requirement
 
-def get_run_number(usb_location):
-    run_dir = os.path.join(usb_location, "run")
-    os.makedirs(run_dir, exist_ok=True)
-    confirm_file = os.path.join(run_dir, "confirm.txt")
+def get_run_number(runs_location):
+    runs_dir = os.path.join(runs_location)
+    os.makedirs(runs_dir, exist_ok=True)
+    confirm_file = os.path.join(runs_dir, "confirm.txt")
 
     if os.path.exists(confirm_file):
         try:
@@ -75,8 +75,8 @@ def get_run_number(usb_location):
 def create_run_folder(usb_location):
     """Create a run folder with the current timestamp on the USB device."""
     run_number = get_run_number(usb_location)
-    run_dir = os.path.join(usb_location, "run")
-    run_folder = os.path.join(run_dir, str(run_number))  # Store runs on USB
+    runs_dir = os.path.join(usb_location, "runs")
+    run_folder = os.path.join(runs_dir, str(run_number))  # Store runs on USB
     os.makedirs(run_folder, exist_ok=True)
     print(f"RUN FOLDER: Created run folder at {run_folder}")
     return run_folder
