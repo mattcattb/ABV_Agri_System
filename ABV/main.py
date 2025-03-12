@@ -187,7 +187,7 @@ def data_collection_thread_function():
             img_location = f"{dc_folder}/f{filename}"
             try:
                 cv2.imwrite(img_location, frame)
-                print(f"DC: saved to {img_location}")
+                # print(f"DC: saved to {img_location}")
             except Exception as e:
                 print("DC ERROR: Failed to save image")
 
