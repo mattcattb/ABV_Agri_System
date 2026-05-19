@@ -1,83 +1,68 @@
-# ABV Camera Monitoring System
+# ABV Agriculture Capture System
 
-This project provides stable control over a camera monitoring system for agriculture field capture use. This project was developed in colaboration with the UF College of Agriculture and Life Sciences. 
+A Jetson Nano camera service for field image capture in agricultural research environments.
 
-![ABV attached to pesticide sprayer](IMG_9503.jpg)
+![ABV agriculture capture hardware mounted in the field](docs/images/abv-camera-system.jpg)
 
-## Project Overview
+## About
 
-This system includes one core functionality:
-- **Data Collection Switch**: Activates and saves images at 30 FPS to external storage when toggled.
+ABV Agriculture Capture System controls a camera and hardware switches on a Jetson Nano so strawberry field images can be captured consistently during equipment operation. It was developed in collaboration with the UF College of Agriculture and Life Sciences.
 
-The system is made to be as dynamic as possible, being able to withstand any system thrown at it.
+## Tech Stack
 
-## Control Flow
+- Python
+- OpenCV
+- NanoCamera
+- Jetson GPIO
+- Linux systemd services
+- Bash
+- Jetson Nano
 
-1. **Startup**: 
-   - Plug in only one USB (SDA) before starting. Do not remove this while the system is on.
-   - The green light will blink during startup. When it turns solid green, the system is ready.
+## Features
 
-2. **Blocking Mode**: 
-   - If the red or blue lights are blinking, the system is in blocking mode. Toggle both switches off to exit.
-   - **Green**: Main system running  
-   - **Blue**: Data collection active (storing images)  
-   - **Red**: YOLO model making inferences  
+- Startup service for launching the capture workflow automatically.
+- Physical switch control for starting and stopping collection.
+- RGB status lights for ready, capture, inference, and blocking states.
+- 30 FPS image capture to external storage.
+- USB mount helper scripts for field storage devices.
+- Test scripts for capture and storage behavior.
 
-3. **Switches**:  
-   - **L_Switch**: Begin data collection  
-   - **R_Switch**: Begin inferencing 
+## My Role
 
-4. **Usage**: 
-   - Start with both switches off. Do not activate both switches simultaneously, as this will cause blocking mode.
+I built the Jetson service workflow, hardware control scripts, capture process, storage handling, and setup scripts needed to deploy the system on the device.
 
-5. **Data Collection**: 
-   - Data collection takes pictures at 30 FPS and stores them in one of the run folders.
+## Hardware Requirements
 
-6. **Inferencing**: 
-   - Inferencing mode starts running the YOLOv8 model on all of the pictures taken and stored from data collection. Do not run before data collection is done.
+- Jetson Nano running JetPack SDK
+- USB camera
+- External USB storage
+- RGB status lights
+- Two physical switches
 
-7. **Shutdown**: 
-   - Turn off the system and then unplug the USB.
+## Setup
 
-## Requirements
+Install the Jetson dependencies, then run the service setup scripts:
 
-### Hardware
-- Jetson Nano (Jetpack SDK)
-- USB Camera
-- RGB lights (Red, Blue, Green)
-- 2 Switches
+```bash
+chmod +x setup_services.sh
+chmod +x start_main_script.sh
+chmod +x usb_mount.sh
+./setup_services.sh
+```
 
-### Software
-- OpenCV (cv2)
-- Archiconda
-- Nanocamera
-- Python 3.8
-- Python services
-- python3-jetson-gpio
-- exFAT (install via `sudo apt-get install exfat-fuse exfat-utils`)
+After setup, reboot the Jetson or reconnect the USB storage. The green status light indicates that the system is ready.
 
-### Setup
+## Operating Notes
 
-1. **Download and Setup Conda Environment**:
-   - Create environment and install NanoCamera, OpenCV, and Jetson GPIO libraries.
+- Start with both switches off.
+- Do not remove the active USB storage device while the system is running.
+- Blue status indicates active data collection.
+- Red status indicates inference mode.
+- Blinking red or blue indicates blocking mode; toggle both switches off to exit.
 
-2. **Setup Services**:
-   ```sh
-   chmod +x setup_services.sh
-   chmod +x start_main_script.sh
-   chmod +x usb_mount.sh
-   ./setup_services.sh
-   ```
-   This will copy all services to the services section and enable them.
+## Future Improvements
 
-3. **Run Software**:
-   - Your setup is now complete! Reboot your Jetson or unplug and replug the USB to see the light start blinking.
-
-
-### Future Goals
-
-- Add GPS Support
-- USB Device Connection
-- Add stronger logging
-- Add service dependencies
-- Finish Test Workflow
+- GPS metadata support.
+- Stronger structured logging.
+- Clearer systemd dependency ordering.
+- More complete automated test workflow.
